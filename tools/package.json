@@ -1,0 +1,5 @@
+{
+  "name": "opencad-local-homepage-tools",
+  "private": true,
+  "dependencies": { "wabt": "1.0.39" }
+}

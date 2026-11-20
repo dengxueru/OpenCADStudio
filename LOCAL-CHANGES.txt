@@ -1,0 +1,51 @@
+OpenCADStudio local homepage customization (2026-11-20)
+
+Deployment: D:\opencad-studio\web\app
+Entry URL: http://127.0.0.1:8765/app/
+Upstream version: 2026.46, commit 3976af345b0f244e59f5c5e8c40c0e42805a72d2
+
+Removed from the homepage:
+- Tutorials, Discussions, Supporters rails and compact navigation tabs
+- Donate button, Reddit community button, Sponsors heading and OpenAEC card
+- Startup donation prompt (only donation_prompt_version is updated in settings)
+- Homepage title, Desktop link and Send Feedback button
+- Homepage Plugins button (plugin engine and installed plugins are unchanged)
+- Top-left OCS application-menu logo (standard toolbar file controls remain)
+- Product name on the refresh/loading splash screen
+- Simplified Chinese command-line ready message now reads: 已就绪。
+
+The original WASM is retained. The entry page loads a separately named patched
+WASM with a matching SHA-384 integrity attribute, avoiding stale asset caches.
+The homepage (916) and logo factory (20386) are changed; two widget destructor
+helpers are appended. The logo retains its original PosReport representation
+for compatibility with optimized callers. Removed elements use Rust vtables, and
+vector lengths are updated so layout, hit testing and focus exclude them.
+Narrow layouts retain Recent and Welcome tabs. The rest of the drawing code
+and the user's existing files/settings are preserved.
+
+Scope: This is a version-specific local release patch, not a complete source
+checkout or an upstream rebuild. A future upstream upgrade needs a new patch.
+The original DONATE command implementation remains in the binary; the homepage
+entry and automatic startup prompt have been removed.
+
+Rebuild from D:\opencad:
+  npm install --prefix tools --cache .npm-cache
+  node tools/inspect-wasm.cjs 916 13737 20386
+  node tools/patch-homepage.cjs
+  node tools/prepare-homepage.cjs
+Outputs: dist/index.html, dist/OpenCADStudio-local-homepage-v2.wasm,
+         dist/asset-name.txt (content-hashed deployment asset),
+         dist/patch-manifest.json (original and modified SHA-256 hashes)
+
+Rollback: Copy deployment's index.before-homepage-cleanup-20261120.html back
+to index.html, then reload the page. Original WASM assets remain in place.
+The donation prompt stays acknowledged for this release in browser settings.
+
+Verification:
+- Full patched WebAssembly validates successfully.
+- Homepage renders with removed sections absent; no runtime console errors.
+- Wide and 560px compact layouts checked; Recent/Welcome switching works.
+- New drawing opens successfully.
+- A generated DXF containing one line opens and renders successfully.
+- Revision 2: removed branding/buttons verified; expanded history shows 已就绪。
+- Refresh splash contains only the spinner and localized loading caption.
