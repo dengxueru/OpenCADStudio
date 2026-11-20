@@ -13,6 +13,12 @@ Removed from the homepage:
 - Top-left OCS application-menu logo (standard toolbar file controls remain)
 - Product name on the refresh/loading splash screen
 - Simplified Chinese command-line ready message now reads: 已就绪。
+- Browser title, localized page titles and installable app name/short name are empty.
+- About/home product-name text is empty; product-name text is removed from all
+  23 source locales, with translation IDs and external URLs preserved.
+- Active WASM display data clears 492 spaced product-name literals and 45 compact
+  product-name occurrences in translation values. Code/storage identifiers remain.
+- PWA metadata uses content-hashed URLs to avoid stale service-worker metadata.
 
 The original WASM is retained. The entry page loads a separately named patched
 WASM with a matching SHA-384 integrity attribute, avoiding stale asset caches.
@@ -30,6 +36,7 @@ entry and automatic startup prompt have been removed.
 
 Rebuild from D:\opencad:
   npm install --prefix tools --cache .npm-cache
+  node tools/clear-display-brand.cjs
   node tools/inspect-wasm.cjs 916 13737 20386
   node tools/patch-homepage.cjs
   node tools/prepare-homepage.cjs
@@ -40,6 +47,13 @@ Outputs: dist/index.html, dist/OpenCADStudio-local-homepage-v2.wasm,
 Rollback: Copy deployment's index.before-homepage-cleanup-20261120.html back
 to index.html, then reload the page. Original WASM assets remain in place.
 The donation prompt stays acknowledged for this release in browser settings.
+
+Scope of empty display names:
+Cargo package/binary names, Rust types, localStorage keys, technical resource
+paths, source translation lookup keys, external URLs, documentation and original
+release/rollback artifacts retain upstream identifiers. These are not empty.
+This change does not rename or migrate user data, or rebuild the full Rust app.
+Source display-name changes are tracked separately from the release patch.
 
 Verification:
 - Full patched WebAssembly validates successfully.

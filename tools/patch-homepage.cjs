@@ -112,9 +112,41 @@ require('wabt')().then(w=>{
    readyAfter.copy(result,readyPos);readyCount++;
  }
  if(readyCount!==2)throw Error('Unexpected ready-message match count: '+readyCount);
+ // Clear display-name literals in data without moving any WASM string address.
+ // Identifiers, storage keys, URLs and binary filenames use the compact form
+ // and are deliberately preserved. Empty Fluent values need a valid expression.
+ const brand=Buffer.from('Open CAD Studio');
+ let brandCount=0,brandPos=-1;
+ while((brandPos=result.indexOf(brand,brandPos+1))>=0){
+   if(brandPos<index.sections.find(s=>s.id===11).start-1024)throw Error('Brand matched executable code');
+   const before=result.subarray(Math.max(0,brandPos-120),brandPos).toString('utf8');
+   const after=result.subarray(brandPos+brand.length,brandPos+brand.length+120).toString('utf8');
+   result.fill(32,brandPos,brandPos+brand.length);
+   if(/(?:^|\n)\s*\.[\w-]+\s*=\s*$/.test(before) && /^[ \t]*\r?\n/.test(after)) {
+     Buffer.from('{ "" }').copy(result,brandPos);
+   }
+   brandCount++;
+ }
+ if(brandCount<400)throw Error('Unexpected display-name coverage: '+brandCount);
+ // Compact spelling in Fluent display values (e.g. renderer-error messages).
+ // Translation IDs and repository URLs are not altered.
+ const compactBrand=Buffer.from('OpenCADStudio');
+ let compactDisplayCount=0,compactPos=-1;
+ while((compactPos=result.indexOf(compactBrand,compactPos+1))>=0){
+   const lineStart=result.lastIndexOf(10,compactPos)+1;
+   if(compactPos-lineStart>4096)continue;
+   const prefix=result.subarray(lineStart,compactPos).toString('utf8');
+   if(!/^[ \t]*\.[\w-]+[ \t]*=/.test(prefix) || /https?:\/\/\S*$/.test(prefix))continue;
+   result.fill(32,compactPos,compactPos+compactBrand.length);
+   compactDisplayCount++;
+ }
  if(!WebAssembly.validate(result))throw Error('Final WASM validation failed');
  fs.mkdirSync('D:/opencad/dist',{recursive:true});
  fs.writeFileSync('D:/opencad/dist/OpenCADStudio-local-homepage-v2.wasm',result);
  fs.writeFileSync('D:/opencad/dist/patch-manifest.json',JSON.stringify({version:'2026.46',revision:2,originalSha256:crypto.createHash('sha256').update(original).digest('hex'),patchedSha256:crypto.createHash('sha256').update(result).digest('hex'),functions:[916,20386],helpers:[dropIndex,trimIndex],valid:true},null,2));
- console.log('Validated patched WASM:',result.length,'bytes');
+ const manifestPath='D:/opencad/dist/patch-manifest.json';
+ const manifest=JSON.parse(fs.readFileSync(manifestPath,'utf8'));
+ manifest.displayNames={spacedLiteralsCleared:brandCount,compactTranslationValuesCleared:compactDisplayCount,pageTitle:'',installName:'',localeTitleCount:23,technicalIdentifiersPreserved:true};
+ fs.writeFileSync(manifestPath,JSON.stringify(manifest,null,2));
+ console.log('Validated patched WASM:',result.length,'bytes; cleared display-name literals:',brandCount,'compact translation values:',compactDisplayCount);
 }).catch(e=>{console.error(e.message);process.exitCode=1;});

@@ -4860,7 +4860,7 @@ fn start_page_content<'a>(
     active: super::StartSection,
     templates: Option<&'a [std::path::PathBuf]>,
 ) -> Element<'a, Message> {
-    let headline = text("Open CAD Studio")
+    let headline = text("")
         .size(crate::ui::style::start_metrics::HEADLINE)
         .style(start_primary_style);
 

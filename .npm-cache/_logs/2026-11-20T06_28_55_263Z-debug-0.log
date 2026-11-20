@@ -1,0 +1,33 @@
+0 verbose cli C:\Users\Administrator\AppData\Local\fnm_multishells\45920_1794707654107\node.exe C:\Users\Administrator\AppData\Local\fnm_multishells\45920_1794707654107\node_modules\npm\bin\npm-cli.js
+1 info using npm@10.9.2
+2 info using node@v23.11.1
+3 silly config load:file:C:\Users\Administrator\AppData\Roaming\fnm\node-versions\v23.11.1\installation\node_modules\npm\npmrc
+4 silly config load:file:D:\opencad\tools\.npmrc
+5 silly config load:file:C:\Users\Administrator\.npmrc
+6 silly config load:file:D:\opencad\tools\etc\npmrc
+7 verbose title npm install @fluent/syntax
+8 verbose argv "install" "--no-save" "--package-lock" "false" "--cache" "D:\\opencad\\.npm-cache" "--prefix" "D:\\opencad\\tools" "@fluent/syntax"
+9 verbose logfile logs-max:10 dir:D:\opencad\.npm-cache\_logs\2026-11-20T06_28_55_263Z-
+10 verbose logfile D:\opencad\.npm-cache\_logs\2026-11-20T06_28_55_263Z-debug-0.log
+11 silly logfile done cleaning log files
+12 silly packumentCache heap:4345298944 maxSize:1086324736 maxEntrySize:543162368
+13 silly idealTree buildDeps
+14 silly fetch manifest @fluent/syntax@*
+15 silly packumentCache full:https://registry.npmjs.org/@fluent%2fsyntax cache-miss
+16 http fetch GET 200 https://registry.npmjs.org/@fluent%2fsyntax 509ms (cache miss)
+17 silly packumentCache full:https://registry.npmjs.org/@fluent%2fsyntax set size:undefined disposed:false
+18 silly placeDep ROOT @fluent/syntax@0.19.0 OK for:  want: *
+19 silly reify moves {}
+20 silly audit bulk request { wabt: [ '1.0.39' ], '@fluent/syntax': [ '0.19.0' ] }
+21 http cache @fluent/syntax@https://registry.npmjs.org/@fluent/syntax/-/syntax-0.19.0.tgz 0ms (cache hit)
+22 silly tarball no local data for @fluent/syntax@https://registry.npmjs.org/@fluent/syntax/-/syntax-0.19.0.tgz. Extracting by manifest.
+23 http fetch GET 200 https://registry.npmjs.org/@fluent/syntax/-/syntax-0.19.0.tgz 205ms (cache miss)
+24 http fetch POST 200 https://registry.npmjs.org/-/npm/v1/security/advisories/bulk 284ms
+25 silly audit report {}
+26 silly ADD node_modules/@fluent/syntax
+27 verbose cwd D:\opencad
+28 verbose os Windows_NT 10.0.22621
+29 verbose node v23.11.1
+30 verbose npm  v10.9.2
+31 verbose exit 0
+32 info ok
