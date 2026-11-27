@@ -38,7 +38,6 @@ impl OpenCADStudio {
             Some(K::FindReplace) => crate::tr!("modal", "find-replace"),
             Some(K::Overkill) => crate::t!("Delete Duplicate Objects").into_owned(),
             Some(K::PluginManager) => crate::tr!("modal", "plugin-manager"),
-            Some(K::UpdateNotice) => crate::tr!("modal", "update-available"),
             Some(K::LayerStateManager) => crate::tr!("modal", "layer-state-manager"),
             Some(K::LayerTranslator) => crate::t!("Layer Translator").into_owned(),
             Some(K::DrawingUnits) => crate::t!("Drawing Units").into_owned(),
@@ -490,13 +489,6 @@ impl OpenCADStudio {
                             .into()
                     })
                 }
-            }
-            super::super::ModalKind::UpdateNotice => {
-                let latest = self.update_notice_version.as_deref().unwrap_or("?");
-                let body = self.update_notice_body.as_deref().unwrap_or("");
-                sized_flow(ex, 560, 460, |flow| {
-                    crate::ui::window::update_notice::view_window(latest, body, flow)
-                })
             }
             super::super::ModalKind::LayerTranslator => {
                 use crate::modules::draw::layers::laytrans;

@@ -41,7 +41,6 @@ impl ModalKind {
             | K::PluginManager
             | K::Options
             | K::XrefHelp
-            | K::UpdateNotice
             | K::GpuWarning
             | K::AssocPrompt
             | K::Unsaved

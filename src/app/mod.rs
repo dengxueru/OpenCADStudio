@@ -2074,13 +2074,6 @@ pub(super) struct OpenCADStudio {
     /// Read-only session (`--read-only`): editing is allowed but every save
     /// path is refused. Set once at boot from the CLI config.
     read_only: bool,
-    /// Tag of the latest available release (without the leading "v"),
-    /// e.g. `"0.3.0"`. `None` when up-to-date or check hasn't returned.
-    update_notice_version: Option<String>,
-    /// Release-notes body for the version above (GitHub release "body"
-    /// markdown, as returned by the API). May be empty when the release
-    /// shipped without notes.
-    update_notice_body: Option<String>,
     /// In-memory clipboard: cloned entities waiting to be pasted.
     clipboard: Vec<document::EntityType>,
     /// Entities removed by the most recent ERASE, kept so OOPS can restore them.
@@ -3465,7 +3458,6 @@ pub enum ModalKind {
     About,
     Shortcuts,
     PluginManager,
-    UpdateNotice,
     LayerStateManager,
     LayerTranslator,
     DrawingUnits,
@@ -5940,17 +5932,11 @@ pub enum Message {
     OsWindowScale(window::Id, f32),
     /// Suppress menu-root tooltips between clicking the root and leaving it.
     StatusMenuTooltipHidden(bool),
-    /// GitHub releases API returned a result. `Some(version)` means a
-    /// newer release exists; we open the update-notice window.
-    UpdateCheckResult(Option<crate::io::update_check::UpdateInfo>),
-    /// CHECKFORUPDATES' answer: shown at once, and reported when there is
-    /// nothing newer.
+    /// The result of a manual update check, displayed in the command line.
     UpdateCheckManual(Option<crate::io::update_check::UpdateInfo>),
     /// The process was asked to stop (SIGTERM).
     #[cfg(not(target_arch = "wasm32"))]
     Terminate,
-    /// User dismissed the update-notice window.
-    UpdateNoticeClose,
     /// First-launch default-association prompt: user accepted — register this
     /// app as the default handler for .dwg / .dxf.
     AssocPromptYes,
@@ -5958,9 +5944,6 @@ pub enum Message {
     AssocPromptNo,
     /// Result of the platform default-association call.
     AssocResult(Result<String, String>),
-    /// User clicked the "Open release page" button — opens the GitHub
-    /// release URL in the OS default browser and closes the notice.
-    UpdateNoticeOpenRelease,
     // ── Plot / Export ─────────────────────────────────────────────────────
     /// Show the SVG save-file dialog and trigger export.
     PlotExport,
@@ -7002,8 +6985,6 @@ impl OpenCADStudio {
             font_source_input: String::new(),
             donation_prompt_version: String::new(),
             read_only: false,
-            update_notice_version: None,
-            update_notice_body: None,
             clipboard: Vec::new(),
             oops_cache: Vec::new(),
             clipboard_base: glam::DVec3::ZERO,
@@ -7643,14 +7624,6 @@ impl OpenCADStudio {
         s.main_window = Some(id);
         tool_windows::set_main_window(id);
         let open_main = open_task.map(|_| Message::Noop);
-        let check_update = if crate::config::managed() {
-            Task::none()
-        } else {
-            Task::perform(
-                crate::io::update_check::check_for_update(),
-                Message::UpdateCheckResult,
-            )
-        };
         let focus_cmd = s.focus_cmd_input();
         // Startup configuration from the command line (see `cli`). File
         // arguments — also how the OS file association launches us when
@@ -7713,7 +7686,6 @@ impl OpenCADStudio {
             s,
             Task::batch([
                 open_main,
-                check_update,
                 focus_cmd,
                 cli_open,
                 script,

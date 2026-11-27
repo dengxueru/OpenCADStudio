@@ -401,8 +401,7 @@ impl OpenCADStudio {
                 return Some(self.unfocus_widgets());
             }
 
-            // The check the program makes at start, on request: the notice
-            // when a newer release is out, a line saying so when not.
+            // Report the result in the command line.
             "CHECKFORUPDATES" => {
                 if cfg!(target_arch = "wasm32") {
                     self.command_line

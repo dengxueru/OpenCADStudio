@@ -72,7 +72,6 @@ pub mod shortcuts;
 pub mod spell_dialog;
 pub mod table_cell_dialog;
 pub mod tool_palettes;
-pub mod update_notice;
 pub mod wblock;
 pub mod xref_attach;
 pub mod xref_help;

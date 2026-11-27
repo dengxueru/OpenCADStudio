@@ -14855,41 +14855,21 @@ impl OpenCADStudio {
                 Task::none()
             }
 
-            // ── Page Setup ────────────────────────────────────────────────
-            Message::UpdateCheckResult(latest) => {
-                let Some(info) = latest else {
-                    return Task::none();
-                };
-                self.update_notice_version = Some(info.version);
-                self.update_notice_body = Some(info.body);
-                self.pending_startup_modals
-                    .push_back(super::ModalKind::UpdateNotice);
-                Task::none()
-            }
             Message::UpdateCheckManual(latest) => {
-                let Some(info) = latest else {
-                    self.command_line.push_output(&crate::tr!(
+                let message = match latest {
+                    Some(info) => crate::tr!(
+                        "view",
+                        "upstream-release-found",
+                        version = info.version
+                    ),
+                    None => crate::tr!(
                         "view",
                         "no-newer-release",
                         version = env!("OCS_APP_VERSION")
-                    ));
-                    return Task::none();
+                    ),
                 };
-                self.update_notice_version = Some(info.version);
-                self.update_notice_body = Some(info.body);
-                self.active_modal = Some(super::ModalKind::UpdateNotice);
-                self.reset_modal_geometry();
+                self.command_line.push_output(&message);
                 Task::none()
-            }
-            Message::UpdateNoticeClose => {
-                self.close_active_modal();
-                Task::none()
-            }
-            Message::UpdateNoticeOpenRelease => {
-                let open =
-                    crate::sys::open_url(crate::io::update_check::DOWNLOAD_PAGE, self.main_window);
-                self.close_active_modal();
-                open
             }
             Message::AssocPromptYes => {
                 self.file_assoc_enabled = true;

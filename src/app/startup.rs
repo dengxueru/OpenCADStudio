@@ -214,21 +214,20 @@ mod tests {
     }
 
     #[test]
-    fn startup_dialogs_wait_their_turn_and_preserve_unseen_prompts() {
+    fn manual_update_reports_version_without_opening_or_queuing_a_dialog() {
         let mut app = OpenCADStudio::new_for_test();
         app.apply_config(AppConfig::default());
         app.queue_startup_prompts();
         assert_eq!(app.active_modal, Some(ModalKind::AssocPrompt));
-        let _ = app.update(Message::UpdateCheckResult(Some(
+        let _ = app.update(Message::UpdateCheckManual(Some(
             crate::io::update_check::UpdateInfo {
                 version: "next-release".to_string(),
                 body: String::new(),
             },
         )));
         assert_eq!(app.active_modal, Some(ModalKind::AssocPrompt));
+        assert!(app.command_line.history_plain_text().contains("next-release"));
         let _ = app.update(Message::AssocPromptNo);
-        assert_eq!(app.active_modal, Some(ModalKind::UpdateNotice));
-        let _ = app.update(Message::UpdateNoticeClose);
         assert!(app.active_modal.is_none());
         assert!(app.pending_startup_modals.is_empty());
     }
