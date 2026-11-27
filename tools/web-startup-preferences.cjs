@@ -9,6 +9,12 @@ try {
   const config = JSON.parse(localStorage.getItem(key) || '{}');
   config.settings = config.settings || {};
   config.settings.donation_prompt_version = '2026.46';
+  // The precompiled 2026.46 release predates the shared Rust ribbon defaults.
+  const ribbon = config.ribbon ??= {};
+  if (typeof ribbon === 'object' && !Array.isArray(ribbon)) {
+    ribbon.minimize ??= 'PanelTitles';
+    ribbon.minimize_pref ??= 'PanelTitles';
+  }
   if (!config.theme?.name) {
     config.theme = {
       name: 'Light',
@@ -35,13 +41,19 @@ function applyStartupPreferences(html) {
   return html.replace(loader, `${startupPreferences}\n${loader}`);
 }
 
-function applyLoadingStyle(html) {
+function applyWebShellStyle(html) {
   const template = readFileSync(resolve(__dirname, '../web-app.html'), 'utf8');
   const style = template.match(/<style id="web-loading-style">[\s\S]*?<\/style>/)?.[0];
   const current = [...html.matchAll(/<style\b[^>]*>[\s\S]*?<\/style>/g)]
     .find(match => match[0].includes('#loading {'))?.[0];
   if (!style || !current) throw Error('Web loading stylesheet not found');
-  return html.replace(current, style);
+  const focus = template.match(/<script id="canvas-pointer-focus">[\s\S]*?<\/script>/)?.[0];
+  if (!focus) throw Error('Canvas focus script not found');
+  const previousFocus = /<script id="canvas-pointer-focus">[\s\S]*?<\/script>/;
+  if (previousFocus.test(html)) {
+    return html.replace(current, style).replace(previousFocus, focus);
+  }
+  return html.replace(current, `${style}\n    ${focus}`);
 }
 
 function webShellVersion(html, wasmDigest) {
@@ -55,4 +67,4 @@ function versionServiceWorker(worker, html, wasmDigest) {
   return worker.replace(cacheVersion, `const CACHE_VERSION = "local-${version}";`);
 }
 
-module.exports = { applyStartupPreferences, applyLoadingStyle, webShellVersion, versionServiceWorker };
+module.exports = { applyStartupPreferences, applyWebShellStyle, webShellVersion, versionServiceWorker };

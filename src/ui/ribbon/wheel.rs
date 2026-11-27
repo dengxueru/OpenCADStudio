@@ -307,7 +307,7 @@ impl<'a> From<WheelTabs<'a>> for Element<'a, Message> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::ribbon::{MenuTarget, MinimizeMsg, RibbonMenuMsg};
+    use crate::ui::ribbon::{MenuTarget, MinimizeMsg, MinimizePref, RibbonMenuMsg};
     use iced::widget::{container, scrollable, text};
     use iced::{Fill, Point};
 
@@ -467,7 +467,7 @@ mod tests {
     #[test]
     fn an_open_tab_popup_follows_the_wheel() {
         let mut ribbon = ribbon();
-        ribbon.on_minimize(MinimizeMsg::Toggle, Instant::now());
+        ribbon.on_minimize(MinimizeMsg::SetPref(MinimizePref::Tabs), Instant::now());
         assert_eq!(ribbon.minimize(), RibbonMinimize::Tabs);
         let shown = ribbon.shown_tabs();
 
@@ -487,7 +487,7 @@ mod tests {
     #[test]
     fn a_hover_due_to_open_its_tab_does_not_undo_the_wheel() {
         let mut ribbon = ribbon();
-        ribbon.on_minimize(MinimizeMsg::Toggle, Instant::now());
+        ribbon.on_minimize(MinimizeMsg::SetPref(MinimizePref::Tabs), Instant::now());
         let shown = ribbon.shown_tabs();
         let t0 = Instant::now();
         ribbon.on_minimize(MinimizeMsg::EnterOpener(Opener::Tab(shown[0])), t0);

@@ -101,25 +101,14 @@ The MCP server is a client of the desktop editor: `ocs_sessions` lists the live
 editor sessions found in the configuration directory and starts one when none
 is running, so several MCP connections can share one editor and its state.
 
-A fresh profile opens two dialogs before any drawing exists, and both block
-document creation:
-
-| Step | `ocs_sessions` reports |
-|---|---|
-| right after launch | `modal: "AssocPrompt"` |
-| after `close_modal` | `modal: "DonationPrompt"` |
-| after a second `close_modal` | `modal: null` |
-
-While a dialog is open, `{"op":"new"}` answers `ok` but no tab is created.
-Close the dialogs first:
+A fresh profile can show the file-association dialog before the first drawing.
+While a startup dialog is open, `{"op":"new"}` can answer `ok` without creating
+a tab. Check the reported modal before creating the drawing.
 
 ```python
 while (info := sessions())["modal"]:
     execute({"op": "action", "name": "close_modal", "document_id": info["document_id"]})
 ```
-
-The donation prompt appears once per application version per profile, so an
-automated profile meets it once per version rather than on every run.
 
 `new` makes the new drawing the active document. Requests carry `document_id`;
 take it from the reply's state and pass it on the following requests, as the

@@ -14146,38 +14146,6 @@ impl OpenCADStudio {
                 }
                 Task::none()
             }
-            Message::PatronsFetched(Ok(names)) => {
-                // Merge the hand-maintained supporters and rank everyone by
-                // amount (also sorts the web list, which arrives unsorted).
-                self.patrons = crate::patreon::merge_manual(names);
-                Task::none()
-            }
-            // No token / offline: still show any hand-maintained supporters
-            // (Start page shows a "Support on Patreon" prompt when empty).
-            Message::PatronsFetched(Err(_)) => {
-                self.patrons = crate::patreon::merge_manual(Vec::new());
-                Task::none()
-            }
-            Message::VideosFetched(Ok(videos)) => {
-                self.videos_loading = false;
-                self.set_videos(videos);
-                Task::none()
-            }
-            // Offline / markup change: keep whatever the on-disk cache seeded.
-            Message::VideosFetched(Err(_)) => {
-                self.videos_loading = false;
-                Task::none()
-            }
-            Message::DiscussionsFetched(Ok(discussions)) => {
-                self.discussions_loading = false;
-                self.discussions = discussions;
-                Task::none()
-            }
-            // Offline: keep the native cache (web leaves the panel empty).
-            Message::DiscussionsFetched(Err(_)) => {
-                self.discussions_loading = false;
-                Task::none()
-            }
             Message::RecentThumbsLoaded(thumbs) => {
                 for (path, handle) in thumbs {
                     self.recent_thumbs.insert(path, handle);
@@ -14912,11 +14880,6 @@ impl OpenCADStudio {
                 self.active_modal = Some(super::ModalKind::UpdateNotice);
                 self.reset_modal_geometry();
                 Task::none()
-            }
-            Message::DonationPromptDonate => {
-                self.close_active_modal();
-                self.dispatch_view("DONATE", self.active_tab)
-                    .unwrap_or_else(Task::none)
             }
             Message::UpdateNoticeClose => {
                 self.close_active_modal();

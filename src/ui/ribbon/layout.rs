@@ -11,11 +11,11 @@ use crate::modules::{CadModule, RibbonGroup};
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Serialize, Deserialize)]
 pub enum RibbonMinimize {
     /// The full ribbon.
-    #[default]
     Off,
     /// Only the tab row.
     Tabs,
     /// The tab row and a row of panel titles.
+    #[default]
     PanelTitles,
     /// The tab row and a row of one button per panel.
     PanelButtons,
@@ -25,11 +25,11 @@ pub enum RibbonMinimize {
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default, Serialize, Deserialize)]
 pub enum MinimizePref {
     /// Step through every minimize state.
-    #[default]
     Cycle,
     /// Switch between the full ribbon and the tab row.
     Tabs,
     /// Switch between the full ribbon and the panel titles.
+    #[default]
     PanelTitles,
     /// Switch between the full ribbon and the panel buttons.
     PanelButtons,

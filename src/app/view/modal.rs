@@ -39,7 +39,6 @@ impl OpenCADStudio {
             Some(K::Overkill) => crate::t!("Delete Duplicate Objects").into_owned(),
             Some(K::PluginManager) => crate::tr!("modal", "plugin-manager"),
             Some(K::UpdateNotice) => crate::tr!("modal", "update-available"),
-            Some(K::DonationPrompt) => crate::tr!("donation", "title"),
             Some(K::LayerStateManager) => crate::tr!("modal", "layer-state-manager"),
             Some(K::LayerTranslator) => crate::t!("Layer Translator").into_owned(),
             Some(K::DrawingUnits) => crate::t!("Drawing Units").into_owned(),
@@ -1691,9 +1690,6 @@ impl OpenCADStudio {
                 crate::ui::style::dimstyle::view_window(self.dim_style_view(), flow)
             }),
             super::super::ModalKind::AssocPrompt => automatic_flow(ex, default_assoc_dialog_window),
-            super::super::ModalKind::DonationPrompt => {
-                sized_flow(ex, 540, 360, donation_dialog_window)
-            }
             super::super::ModalKind::GpuWarning => sized_flow(ex, 520, 400, |flow| {
                 gpu_warning_window(&self.gpu_status, flow)
             }),
@@ -2718,40 +2714,6 @@ fn gpu_warning_window(
     .style(dialog_body_style)
     .center_x(sizing.width)
     .center_y(sizing.height)
-    .padding([24, 28])
-    .into()
-}
-
-fn donation_dialog_window(sizing: crate::ui::modal::ModalSizing) -> Element<'static, Message> {
-    container(
-        column![
-            text(crate::tr!("donation", "heading")).size(18),
-            row![
-                text(crate::tr!("donation", "body")).size(14).width(Fill),
-                crate::ui::icons::themed(crate::ui::icons::HEART, 52.0),
-            ]
-            .spacing(20)
-            .align_y(iced::Center),
-            row![
-                Space::new().width(Fill),
-                dialog_button(
-                    crate::tr!("start", "donate"),
-                    Message::DonationPromptDonate,
-                    button::primary,
-                ),
-                dialog_button(
-                    crate::tr!("donation", "decline"),
-                    Message::CloseModal,
-                    button::secondary,
-                ),
-            ]
-            .spacing(8)
-            .align_y(iced::Center),
-        ]
-        .spacing(18)
-        .width(sizing.width),
-    )
-    .style(dialog_body_style)
     .padding([24, 28])
     .into()
 }

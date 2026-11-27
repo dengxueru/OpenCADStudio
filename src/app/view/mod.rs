@@ -914,12 +914,6 @@ impl OpenCADStudio {
             .into()
         } else if tab.is_start {
             start_page_view(
-                &self.patrons,
-                &self.videos,
-                self.videos_loading,
-                &self.video_thumbs,
-                &self.discussions,
-                self.discussions_loading,
                 &self.recent_files,
                 &self.recent_thumbs,
                 self.recent_limit,
@@ -3488,15 +3482,10 @@ bg={bg_ms:.1}ms n={view_count}"
             // the mode can be toggled back off.
             let mut col = column![];
             if self.clean_screen {
-                // Clean screen keeps the menu row, led by the compact logo.
                 if self.show_menu_bar {
                     col = col.push(
-                        row![
-                            container(self.ribbon.logo_button(false)).padding([0, 6]),
-                            self.ribbon
-                                .with_search_box(crate::ui::menu_bar::view(self.menu_context())),
-                        ]
-                        .align_y(iced::Center),
+                        self.ribbon
+                            .with_search_box(crate::ui::menu_bar::view(self.menu_context())),
                     );
                 }
             } else {
@@ -4772,12 +4761,6 @@ fn start_muted_style(theme: &Theme) -> iced::widget::text::Style {
     }
 }
 
-fn start_primary_style(theme: &Theme) -> iced::widget::text::Style {
-    iced::widget::text::Style {
-        color: Some(crate::ui::style::chrome::accent(theme)),
-    }
-}
-
 /// Transparent input layer for one Model pane: a `mouse_area` filling the pane
 /// that emits pane-tagged viewport events (`idx` = the pane's tile index). The
 /// handlers offset the pane-local point to canvas coords and focus the pane.
@@ -4806,12 +4789,6 @@ fn start_action_shape(mut style: button::Style) -> button::Style {
 }
 
 pub(super) fn start_page_view<'a>(
-    patrons: &'a [(String, i64)],
-    videos: &'a [crate::videos::VideoEntry],
-    videos_loading: bool,
-    video_thumbs: &'a std::collections::HashMap<String, iced::widget::image::Handle>,
-    discussions: &'a [crate::discussions::DiscussionEntry],
-    discussions_loading: bool,
     recents: &'a [std::path::PathBuf],
     thumbs: &'a std::collections::HashMap<std::path::PathBuf, Option<iced::widget::image::Handle>>,
     recent_limit: usize,
@@ -4823,12 +4800,6 @@ pub(super) fn start_page_view<'a>(
 ) -> Element<'a, Message> {
     responsive(move |size| {
         start_page_content(
-            patrons,
-            videos,
-            videos_loading,
-            video_thumbs,
-            discussions,
-            discussions_loading,
             recents,
             thumbs,
             recent_limit,
@@ -4844,12 +4815,6 @@ pub(super) fn start_page_view<'a>(
 }
 
 fn start_page_content<'a>(
-    patrons: &'a [(String, i64)],
-    videos: &'a [crate::videos::VideoEntry],
-    videos_loading: bool,
-    video_thumbs: &'a std::collections::HashMap<String, iced::widget::image::Handle>,
-    discussions: &'a [crate::discussions::DiscussionEntry],
-    discussions_loading: bool,
     recents: &'a [std::path::PathBuf],
     thumbs: &'a std::collections::HashMap<std::path::PathBuf, Option<iced::widget::image::Handle>>,
     recent_limit: usize,
@@ -4860,11 +4825,6 @@ fn start_page_content<'a>(
     active: super::StartSection,
     templates: Option<&'a [std::path::PathBuf]>,
 ) -> Element<'a, Message> {
-    let headline = text("")
-        .size(crate::ui::style::start_metrics::HEADLINE)
-        .style(start_primary_style);
-
-    // Plain outlined button (Open / New / Help / Contribute).
     let outline_btn = |label: String, msg: Message| {
         button(text(label).size(crate::ui::style::start_metrics::ACTION_TEXT))
             .on_press(msg)
@@ -4891,25 +4851,6 @@ fn start_page_content<'a>(
                     ..Default::default()
                 })
             })
-    };
-
-    // Donate — the prominent call-to-action, using the theme's danger role.
-    let donate_btn = {
-        button(
-            row![
-                crate::ui::icons::themed_danger_text(crate::ui::icons::HEART, 14.0),
-                text(crate::tr!("start", "donate"))
-                    .size(crate::ui::style::start_metrics::ACTION_TEXT),
-            ]
-            .spacing(5)
-            .align_y(iced::Center),
-        )
-        .on_press(Message::RibbonToolClick {
-            tool_id: "DONATE".to_string(),
-            event: crate::modules::ModuleEvent::Command("DONATE".to_string()),
-        })
-        .padding(crate::ui::style::start_metrics::ACTION_PAD)
-        .style(|theme: &Theme, status| start_action_shape(button::danger(theme, status)))
     };
 
     let primary_row = WrapFlow::new(vec![
@@ -4967,179 +4908,28 @@ fn start_page_content<'a>(
             }
         },
         outline_btn(crate::tr!("start", "open-file"), Message::OpenFile).into(),
-        donate_btn.into(),
     ])
     .spacing_x(crate::ui::style::start_metrics::ACTION_GAP)
     .row_h(48.0)
     .report_natural_width(action_width_out.clone());
 
-    #[cfg_attr(target_arch = "wasm32", allow(unused_mut))]
-    let mut secondary_items: Vec<Element<'a, Message>> = vec![
-        outline_btn(
-            crate::tr!("start", "send-feedback"),
-            Message::RibbonToolClick {
-                tool_id: "REPORT".to_string(),
-                event: crate::modules::ModuleEvent::Command("REPORT".to_string()),
-            },
-        )
-        .into(),
-        outline_btn(crate::tr!("action", "options"), Message::OptionsOpen).into(),
-    ];
-    secondary_items
-        .push(outline_btn(crate::tr!("action", "plugins"), Message::PluginManagerOpen).into());
-    // The web build is already in the browser, so only the desktop offers a
-    // link to the web version.
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        // Filled with the active theme's primary colour.
-        secondary_items.push(
-            button(text(crate::t!("OCS Web")).size(crate::ui::style::start_metrics::ACTION_TEXT))
-                .on_press(Message::RibbonToolClick {
-                    tool_id: "WEBVERSION".to_string(),
-                    event: crate::modules::ModuleEvent::Command("WEBVERSION".to_string()),
-                })
-                .padding(crate::ui::style::start_metrics::ACTION_PAD)
-                .style(|theme: &Theme, status| start_action_shape(button::primary(theme, status)))
-                .into(),
-        );
-    }
-    #[cfg(target_arch = "wasm32")]
-    secondary_items.push(
-        button(text(crate::t!("OCS Desktop")).size(crate::ui::style::start_metrics::ACTION_TEXT))
-            .on_press(Message::OpenUrl(
-                "https://github.com/HakanSeven12/OpenCADStudio/releases/latest".to_string(),
-            ))
-            .padding(crate::ui::style::start_metrics::ACTION_PAD)
-            .style(|theme: &Theme, status| start_action_shape(button::primary(theme, status)))
-            .into(),
-    );
-    let secondary_row = WrapFlow::new(secondary_items)
-        .spacing_x(crate::ui::style::start_metrics::ACTION_GAP)
-        .row_h(44.0)
-        .report_natural_width(action_width_out.clone());
-
-    let reddit_btn = button(
-        row![
-            iced::widget::svg(iced::widget::svg::Handle::from_memory(include_bytes!(
-                "../../../assets/icons/reddit.svg"
-            )))
-            .width(crate::ui::style::start_metrics::ACTION_ICON)
-            .height(crate::ui::style::start_metrics::ACTION_ICON),
-            text("r/OpenCADStudio").size(crate::ui::style::start_metrics::ACTION_TEXT),
-        ]
-        .spacing(7)
-        .align_y(iced::Center),
-    )
-    .on_press(Message::OpenUrl(
-        "https://www.reddit.com/r/OpenCADStudio/".to_string(),
-    ))
-    .padding(crate::ui::style::start_metrics::ACTION_PAD)
-    .style(|theme: &Theme, status| {
-        let pair = match status {
-            button::Status::Hovered => iced::theme::palette::Pair::new(
-                crate::ui::style::chrome::hover(theme),
-                crate::ui::style::chrome::strong(theme),
-            ),
-            _ => iced::theme::palette::Pair::new(
-                crate::ui::style::chrome::panel(theme),
-                crate::ui::style::chrome::text(theme),
-            ),
-        };
-        start_action_shape(button::Style {
-            background: Some(Background::Color(pair.color)),
-            text_color: pair.text,
-            border: Border {
-                color: Color::from_rgb8(255, 69, 0),
-                width: crate::ui::style::kit_metrics::line(),
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-    });
-
-    let sponsors = column![
-        text(crate::tr!("start", "sponsors")).size(crate::ui::style::start_metrics::SECTION_TITLE),
-        mouse_area(
-            container(
-                iced::widget::svg(iced::widget::svg::Handle::from_memory(include_bytes!(
-                    "../../../assets/sponsors/openaec-logo-dark-on-light.svg"
-                )))
-                .width(Fill)
-                .height(iced::Length::Fixed(
-                    crate::ui::style::start_metrics::SPONSOR_H
-                ))
-                .content_fit(iced::ContentFit::Contain),
-            )
-            .width(Fill.max(300.0)),
-        )
-        .interaction(iced::mouse::Interaction::Pointer)
-        .on_press(Message::OpenUrl("https://open-aec.com/".to_string())),
-    ]
-    .spacing(crate::ui::style::start_metrics::GAP_L)
-    .align_x(iced::alignment::Horizontal::Center)
-    .width(Fill);
+    let options = outline_btn(crate::tr!("action", "options"), Message::OptionsOpen);
 
     let content = column![
         Space::new().height(iced::Length::Fixed(28.0)),
-        container(headline).center_x(Fill),
-        Space::new().height(iced::Length::Fixed(22.0)),
         container(primary_row).center_x(Fill),
         Space::new().height(iced::Length::Fixed(crate::ui::style::start_metrics::GAP_L)),
-        container(secondary_row).center_x(Fill),
-        Space::new().height(iced::Length::Fixed(crate::ui::style::start_metrics::GAP_L)),
-        container(reddit_btn).center_x(Fill),
-        Space::new().height(iced::Length::Fixed(20.0)),
-        sponsors,
-        Space::new().height(iced::Length::Fixed(52.0)),
+        container(options).center_x(Fill),
     ]
     .spacing(0)
     .width(Fill)
     .height(Fill);
 
-    // Collapse side panels one at a time as width shrinks: Tutorials first,
-    // then Discussions, Supporters, and Recent Documents last.
-    #[derive(Clone, Copy, PartialEq, Eq)]
-    enum StartLayout {
-        AllPanels,
-        WithoutVideos,
-        WithoutVideosAndDiscussions,
-        RecentAndWelcome,
-        Compact,
-    }
-    let panel_w = 280.0f32;
-    const VIDEO_PANEL_PADDING: f32 = 16.0;
-    const VIDEO_SCROLL_GUTTER: f32 = 14.0;
+    let panel_w = 280.0;
     let measured_action_w =
         f32::from_bits(action_width_out.load(std::sync::atomic::Ordering::Relaxed));
-    let welcome_wide_min = measured_action_w.max(360.0);
-    let avail = (avail_w - 16.0).max(0.0); // minus the page's l/r padding
-    let panel_widths = [panel_w; 4];
-    let mut panel_visible = [true, true, true, true];
-    let required_width = |visible: &[bool; 4]| {
-        let visible_panels = visible.iter().filter(|&&shown| shown).count();
-        welcome_wide_min
-            + panel_widths
-                .iter()
-                .zip(visible)
-                .filter_map(|(width, shown)| shown.then_some(*width))
-                .sum::<f32>()
-            + visible_panels as f32 * 16.0
-    };
-    // Re-measure after every collapse. There are no independent breakpoints:
-    // the available width and the panels' preferred widths decide the state.
-    for panel in [1usize, 2, 3, 0] {
-        if required_width(&panel_visible) <= avail {
-            break;
-        }
-        panel_visible[panel] = false;
-    }
-    let start_layout = match panel_visible {
-        [true, true, true, true] => StartLayout::AllPanels,
-        [true, false, true, true] => StartLayout::WithoutVideos,
-        [true, false, false, true] => StartLayout::WithoutVideosAndDiscussions,
-        [true, false, false, false] => StartLayout::RecentAndWelcome,
-        _ => StartLayout::Compact,
-    };
+    let side_by_side = avail_w - 16.0
+        >= panel_w + crate::ui::style::start_metrics::GAP_XL + measured_action_w.max(360.0);
 
     let recent = recent_files_panel(
         recents,
@@ -5147,460 +4937,87 @@ fn start_page_content<'a>(
         recent_limit,
         recent_limit_input,
         recent_view,
-        match start_layout {
-            StartLayout::AllPanels
-            | StartLayout::WithoutVideos
-            | StartLayout::WithoutVideosAndDiscussions
-            | StartLayout::RecentAndWelcome => iced::Length::Fixed(panel_w),
-            StartLayout::Compact => iced::Length::Fill,
+        if side_by_side {
+            iced::Length::Fixed(panel_w)
+        } else {
+            Fill
         },
     );
     let welcome = container(content).width(Fill).height(Fill);
 
-    // Tutorial-videos rail: the official playlist, fetched at boot (cached on
-    // disk) — thumbnail card + title per video, click opens the browser.
-    let videos_panel: Element<'a, Message> = {
-        // Derive the 16:9 cover box from the actual shared list width so the
-        // whole thumbnail remains visible when that width changes.
-        let thumb_h = (panel_w - VIDEO_PANEL_PADDING * 2.0 - VIDEO_SCROLL_GUTTER) * 9.0 / 16.0;
-        let mut list = column![text(crate::tr!("start", "tutorials"))
-            .size(crate::ui::style::start_metrics::SECTION_TITLE)]
-        .spacing(crate::ui::style::start_metrics::GAP_L)
-        .width(Fill)
-        // Keep the scrollbar off the thumbnails.
-        .padding(iced::Padding {
-            right: VIDEO_SCROLL_GUTTER,
-            ..iced::Padding::ZERO
-        });
-        for v in videos {
-            let mut card = column![]
-                .spacing(crate::ui::style::start_metrics::GAP)
-                .width(Fill);
-            if let Some(handle) = video_thumbs.get(&v.id) {
-                card = card.push(
-                    container(
-                        iced::widget::image(handle.clone())
-                            .width(Fill)
-                            .height(iced::Length::Fixed(thumb_h))
-                            .content_fit(iced::ContentFit::Contain),
-                    )
-                    .width(Fill)
-                    .height(iced::Length::Fixed(thumb_h))
-                    .style(|theme: &Theme| container::Style {
+    let body: Element<'a, Message> = if side_by_side {
+        iced::widget::row![recent, welcome]
+            .spacing(crate::ui::style::start_metrics::GAP_XL)
+            .height(Fill)
+            .into()
+    } else {
+        let tab_btn = |label: String, section: super::StartSection| {
+            let is_active = active == section;
+            button(text(label).size(crate::ui::style::start_metrics::ACTION_TEXT))
+                .on_press(Message::StartSectionSelect(section))
+                .padding([8, 18])
+                .style(move |theme: &Theme, status| {
+                    let pair = match (is_active, status) {
+                        (true, _) => Some(iced::theme::palette::Pair::new(
+                            crate::ui::style::chrome::lit(theme),
+                            crate::ui::style::chrome::strong(theme),
+                        )),
+                        (false, button::Status::Hovered) => {
+                            Some(iced::theme::palette::Pair::new(
+                                crate::ui::style::chrome::hover(theme),
+                                crate::ui::style::chrome::strong(theme),
+                            ))
+                        }
+                        _ => None,
+                    };
+                    button::Style {
+                        background: pair.map(|p| Background::Color(p.color)),
+                        text_color: pair
+                            .map(|p| p.text)
+                            .unwrap_or(crate::ui::style::readable::muted_text(theme)),
                         border: Border {
-                            color: crate::ui::style::chrome::border(theme),
-                            width: crate::ui::style::kit_metrics::line(),
+                            color: if is_active {
+                                crate::ui::style::chrome::accent(theme)
+                            } else {
+                                Color::TRANSPARENT
+                            },
+                            width: if is_active { 1.0 } else { 0.0 },
                             radius: 6.0.into(),
                         },
                         ..Default::default()
-                    })
-                    .clip(true),
-                );
-            }
-            card = card.push(
-                text(v.title.clone())
-                    .size(crate::ui::style::text::UI_LARGE)
-                    .style(start_muted_style),
-            );
-            list = list.push(
-                mouse_area(card)
-                    .interaction(iced::mouse::Interaction::Pointer)
-                    .on_press(Message::OpenUrl(crate::videos::watch_url(&v.id))),
-            );
-        }
-        if videos.is_empty() {
-            let note = if videos_loading {
-                crate::tr!("start", "loading-videos")
-            } else {
-                crate::tr!("start", "videos-online")
-            };
-            list = list.push(
-                text(note)
-                    .size(crate::ui::style::text::UI_LARGE)
-                    .style(start_muted_style),
-            );
-        }
-        let playlist_btn = mouse_area(
-            container(
-                text(crate::tr!("start", "open-playlist")).size(crate::ui::style::text::UI_LARGE),
+                    }
+                })
+        };
+        let tab_bar = Row::with_children(vec![
+            tab_btn(
+                crate::tr!("start", "recent-files"),
+                super::StartSection::Recent,
             )
-            .padding(crate::ui::style::start_metrics::TAB_PAD)
-            .width(Fill)
-            .center_x(Fill)
-            .style(|theme: &Theme| {
-                let pair = theme.palette().danger.base;
-                container::Style {
-                    background: Some(Background::Color(pair.color)),
-                    border: Border {
-                        color: Color::TRANSPARENT,
-                        width: 0.0,
-                        radius: 6.0.into(),
-                    },
-                    text_color: Some(pair.text),
-                    ..Default::default()
-                }
-            }),
-        )
-        .interaction(iced::mouse::Interaction::Pointer)
-        .on_press(Message::OpenUrl(crate::videos::PLAYLIST_URL.to_string()));
-        container(column![
-            iced::widget::scrollable(list).height(Fill),
-            Space::new().height(iced::Length::Fixed(
-                crate::ui::style::start_metrics::SECTION_GAP
-            )),
-            playlist_btn,
+            .into(),
+            tab_btn(crate::tr!("start", "welcome"), super::StartSection::Welcome).into(),
         ])
-        .width(match start_layout {
-            StartLayout::AllPanels => iced::Length::Fixed(panel_w),
-            StartLayout::WithoutVideos
-            | StartLayout::WithoutVideosAndDiscussions
-            | StartLayout::RecentAndWelcome
-            | StartLayout::Compact => iced::Length::Fill,
-        })
-        .height(Fill)
-        .padding(VIDEO_PANEL_PADDING)
-        .style(|theme: &Theme| container::Style {
-            background: Some(Background::Color(crate::ui::style::chrome::panel(theme))),
-            border: Border {
-                color: crate::ui::style::chrome::border(theme),
-                width: crate::ui::style::kit_metrics::line(),
-                radius: 8.0.into(),
-            },
-            ..Default::default()
-        })
-        .into()
-    };
-
-    // GitHub Discussions rail. Native builds refresh from GitHub's public feed;
-    // web builds read the CI-generated snapshot. Both sources mark pinned
-    // discussions and sort them before the rest of the list.
-    let discussions_panel: Element<'a, Message> = {
-        let mut list = column![text(crate::tr!("start", "discussions"))
-            .size(crate::ui::style::start_metrics::SECTION_TITLE)]
-        .spacing(crate::ui::style::start_metrics::GAP_M)
-        .width(Fill);
-        for discussion in discussions {
-            let mut meta = iced::widget::row![text(format!("#{}", discussion.number))
-                .size(crate::ui::style::text::UI_SMALL)
-                .style(start_muted_style),]
-            .spacing(crate::ui::style::start_metrics::GAP)
-            .align_y(iced::Center);
-            if discussion.pinned {
-                meta = meta.push(
-                    text(crate::tr!("start", "pinned"))
-                        .size(crate::ui::style::text::UI_SMALL)
-                        .style(start_primary_style),
-                );
-            }
-            if !discussion.author.is_empty() {
-                meta = meta.push(
-                    text(format!("@{}", discussion.author))
-                        .size(crate::ui::style::text::UI_SMALL)
-                        .style(start_muted_style),
-                );
-            }
-            let card = container(
-                column![
-                    text(discussion.title.clone()).size(crate::ui::style::text::UI_LARGE),
-                    meta,
-                ]
-                .spacing(crate::ui::style::start_metrics::GAP_S),
-            )
-            .padding([8, 10])
-            .width(Fill)
-            .style(|theme: &Theme| container::Style {
-                background: Some(Background::Color(
-                    crate::ui::style::chrome::page(theme).scale_alpha(0.42),
-                )),
-                border: Border {
-                    color: crate::ui::style::chrome::border(theme),
-                    width: crate::ui::style::kit_metrics::line(),
-                    radius: 6.0.into(),
-                },
-                ..Default::default()
-            });
-            list = list.push(
-                mouse_area(card)
-                    .interaction(iced::mouse::Interaction::Pointer)
-                    .on_press(Message::OpenUrl(discussion.url.clone())),
-            );
-        }
-        if discussions.is_empty() {
-            let note = if discussions_loading {
-                crate::tr!("start", "loading-discussions")
-            } else {
-                crate::tr!("start", "discussions-online")
-            };
-            list = list.push(
-                text(note)
-                    .size(crate::ui::style::text::UI_LARGE)
-                    .style(start_muted_style),
-            );
-        }
-        let open_btn = mouse_area(
-            container(
-                text(crate::tr!("start", "open-discussions"))
-                    .size(crate::ui::style::text::UI_LARGE),
-            )
-            .padding(crate::ui::style::start_metrics::TAB_PAD)
-            .width(Fill)
-            .center_x(Fill)
-            .style(|theme: &Theme| {
-                let pair = iced::theme::palette::Pair::new(
-                    crate::ui::style::chrome::accent(theme),
-                    crate::ui::style::chrome::on_accent(theme),
-                );
-                container::Style {
-                    background: Some(Background::Color(pair.color)),
-                    border: Border {
-                        color: Color::TRANSPARENT,
-                        width: 0.0,
-                        radius: 6.0.into(),
-                    },
-                    text_color: Some(pair.text),
-                    ..Default::default()
-                }
-            }),
-        )
-        .interaction(iced::mouse::Interaction::Pointer)
-        .on_press(Message::OpenUrl(
-            crate::discussions::DISCUSSIONS_URL.to_string(),
-        ));
-        container(column![
-            iced::widget::scrollable(list).height(Fill),
-            Space::new().height(iced::Length::Fixed(
-                crate::ui::style::start_metrics::SECTION_GAP
-            )),
-            open_btn,
-        ])
-        .width(match start_layout {
-            StartLayout::AllPanels | StartLayout::WithoutVideos => iced::Length::Fixed(panel_w),
-            StartLayout::WithoutVideosAndDiscussions
-            | StartLayout::RecentAndWelcome
-            | StartLayout::Compact => iced::Length::Fill,
-        })
-        .height(Fill)
-        .padding(crate::ui::style::start_metrics::CARD_PAD)
-        .style(|theme: &Theme| container::Style {
-            background: Some(Background::Color(crate::ui::style::chrome::panel(theme))),
-            border: Border {
-                color: crate::ui::style::chrome::border(theme),
-                width: crate::ui::style::kit_metrics::line(),
-                radius: 8.0.into(),
-            },
-            ..Default::default()
-        })
-        .into()
-    };
-
-    // Right rail: Patreon supporters, fetched at boot. When the list is empty
-    // (no token configured / offline) only the "Support on Patreon" button
-    // shows, so the rail always invites support.
-    let supporters: Element<'a, Message> = {
-        let mut list = column![
-            text(crate::tr!("start", "supporters"))
-                .size(crate::ui::style::start_metrics::SECTION_TITLE),
-            Space::new().height(iced::Length::Fixed(
-                crate::ui::style::start_metrics::SECTION_GAP
-            )),
-        ]
         .spacing(crate::ui::style::start_metrics::GAP)
-        .padding(iced::Padding {
-            right: 12.0,
-            ..iced::Padding::ZERO
-        })
-        .width(Fill);
-        for (name, cents) in patrons {
-            // Patreon payments are normalized to USD cents while the list is
-            // generated; hand-maintained entries use USD cents as well.
-            let amount = format!("${:.2}", *cents as f64 / 100.0);
-            list = list.push(
-                iced::widget::row![
-                    text(name)
-                        .size(crate::ui::style::text::UI_LARGE)
-                        .style(start_muted_style)
-                        .width(Fill),
-                    text(amount)
-                        .size(crate::ui::style::text::UI_LARGE)
-                        .style(start_muted_style),
-                ]
-                .spacing(crate::ui::style::start_metrics::GAP),
-            );
-        }
-        let support_btn = mouse_area(
-            container(
-                iced::widget::row![
-                    crate::ui::icons::themed_danger_text(crate::ui::icons::HEART, 13.0),
-                    text(crate::tr!("start", "support-on-patreon"))
-                        .size(crate::ui::style::text::UI_LARGE),
-                ]
-                .spacing(crate::ui::style::start_metrics::GAP)
-                .align_y(iced::Center),
-            )
-            .padding(crate::ui::style::start_metrics::TAB_PAD)
-            .width(Fill)
-            .center_x(Fill)
-            .style(|theme: &Theme| {
-                let pair = theme.palette().danger.base;
-                container::Style {
-                    background: Some(Background::Color(pair.color)),
-                    border: Border {
-                        color: Color::TRANSPARENT,
-                        width: 0.0,
-                        radius: 6.0.into(),
-                    },
-                    text_color: Some(pair.text),
-                    ..Default::default()
-                }
-            }),
-        )
-        .interaction(iced::mouse::Interaction::Pointer)
-        .on_press(Message::OpenUrl(
-            "https://patreon.com/HakanSeven12".to_string(),
-        ));
-        container(column![
-            iced::widget::scrollable(list).height(Fill),
+        .align_y(iced::Center)
+        .wrap()
+        .vertical_spacing(0.0);
+        let section_body: Element<'a, Message> = match active {
+            super::StartSection::Recent => container(recent)
+                .width(Fill)
+                .height(Fill)
+                .center_x(Fill)
+                .into(),
+            super::StartSection::Welcome => welcome.into(),
+        };
+        column![
+            container(tab_bar).center_x(Fill),
             Space::new().height(iced::Length::Fixed(
                 crate::ui::style::start_metrics::SECTION_GAP
             )),
-            support_btn,
-        ])
-        .width(match start_layout {
-            StartLayout::AllPanels
-            | StartLayout::WithoutVideos
-            | StartLayout::WithoutVideosAndDiscussions => iced::Length::Fixed(panel_w),
-            StartLayout::RecentAndWelcome | StartLayout::Compact => iced::Length::Fill,
-        })
+            section_body,
+        ]
+        .width(Fill)
         .height(Fill)
-        .padding(crate::ui::style::start_metrics::PANEL_PAD)
-        .style(|theme: &Theme| container::Style {
-            background: Some(Background::Color(crate::ui::style::chrome::panel(theme))),
-            border: Border {
-                color: crate::ui::style::chrome::border(theme),
-                width: crate::ui::style::kit_metrics::line(),
-                radius: 8.0.into(),
-            },
-            ..Default::default()
-        })
         .into()
-    };
-
-    let body: Element<'a, Message> = match start_layout {
-        StartLayout::AllPanels => {
-            iced::widget::row![recent, videos_panel, welcome, discussions_panel, supporters,]
-                .spacing(crate::ui::style::start_metrics::GAP_XL)
-                .height(Fill)
-                .into()
-        }
-        StartLayout::WithoutVideos => {
-            iced::widget::row![recent, welcome, discussions_panel, supporters]
-                .spacing(crate::ui::style::start_metrics::GAP_XL)
-                .height(Fill)
-                .into()
-        }
-        StartLayout::WithoutVideosAndDiscussions => iced::widget::row![recent, welcome, supporters]
-            .spacing(crate::ui::style::start_metrics::GAP_XL)
-            .height(Fill)
-            .into(),
-        StartLayout::RecentAndWelcome => iced::widget::row![recent, welcome]
-            .spacing(crate::ui::style::start_metrics::GAP_XL)
-            .height(Fill)
-            .into(),
-        StartLayout::Compact => {
-            let tab_btn = |label: String, section: super::StartSection| {
-                let is_active = active == section;
-                button(text(label).size(crate::ui::style::start_metrics::ACTION_TEXT))
-                    .on_press(Message::StartSectionSelect(section))
-                    .padding([8, 18])
-                    .style(move |theme: &Theme, status| {
-                        let pair = match (is_active, status) {
-                            (true, _) => Some(iced::theme::palette::Pair::new(
-                                crate::ui::style::chrome::lit(theme),
-                                crate::ui::style::chrome::strong(theme),
-                            )),
-                            (false, button::Status::Hovered) => {
-                                Some(iced::theme::palette::Pair::new(
-                                    crate::ui::style::chrome::hover(theme),
-                                    crate::ui::style::chrome::strong(theme),
-                                ))
-                            }
-                            _ => None,
-                        };
-                        button::Style {
-                            background: pair.map(|p| Background::Color(p.color)),
-                            text_color: pair
-                                .map(|p| p.text)
-                                .unwrap_or(crate::ui::style::readable::muted_text(theme)),
-                            border: Border {
-                                color: if is_active {
-                                    crate::ui::style::chrome::accent(theme)
-                                } else {
-                                    Color::TRANSPARENT
-                                },
-                                width: if is_active { 1.0 } else { 0.0 },
-                                radius: 6.0.into(),
-                            },
-                            ..Default::default()
-                        }
-                    })
-            };
-            let tab_bar = Row::with_children(vec![
-                tab_btn(
-                    crate::tr!("start", "recent-files"),
-                    super::StartSection::Recent,
-                )
-                .into(),
-                tab_btn(crate::tr!("start", "videos"), super::StartSection::Videos).into(),
-                tab_btn(crate::tr!("start", "welcome"), super::StartSection::Welcome).into(),
-                tab_btn(
-                    crate::tr!("start", "discussions"),
-                    super::StartSection::Discussions,
-                )
-                .into(),
-                tab_btn(
-                    crate::tr!("start", "supporters"),
-                    super::StartSection::Supporters,
-                )
-                .into(),
-            ])
-            .spacing(crate::ui::style::start_metrics::GAP)
-            .align_y(iced::Center)
-            .wrap()
-            .vertical_spacing(0.0);
-            let section_body: Element<'a, Message> = match active {
-                super::StartSection::Recent => container(recent)
-                    .width(Fill)
-                    .height(Fill)
-                    .center_x(Fill)
-                    .into(),
-                super::StartSection::Videos => container(videos_panel)
-                    .width(Fill)
-                    .height(Fill)
-                    .center_x(Fill)
-                    .into(),
-                super::StartSection::Welcome => welcome.into(),
-                super::StartSection::Discussions => container(discussions_panel)
-                    .width(Fill)
-                    .height(Fill)
-                    .center_x(Fill)
-                    .into(),
-                super::StartSection::Supporters => container(supporters)
-                    .width(Fill)
-                    .height(Fill)
-                    .center_x(Fill)
-                    .into(),
-            };
-            column![
-                container(tab_bar).center_x(Fill),
-                Space::new().height(iced::Length::Fixed(
-                    crate::ui::style::start_metrics::SECTION_GAP
-                )),
-                section_body,
-            ]
-            .width(Fill)
-            .height(Fill)
-            .into()
-        }
     };
 
     container(body)
@@ -6237,6 +5654,46 @@ mod tests {
         assert!(crate::ui::style::common::canvas_is_light(bg));
     }
 
+    #[test]
+    fn start_page_shows_only_recent_files_and_drawing_actions() {
+        use super::super::StartSection;
+        use iced_test::simulator::Simulator;
+
+        crate::with_headless_ui(|| {
+            let thumbs = std::collections::HashMap::new();
+            for (width, active, recent, actions) in [
+                (1600.0, StartSection::Recent, true, true),
+                (560.0, StartSection::Recent, true, false),
+                (560.0, StartSection::Welcome, false, true),
+            ] {
+                let page = start_page_content(
+                    &[],
+                    &thumbs,
+                    20,
+                    "20",
+                    super::super::RecentView::List,
+                    width,
+                    Default::default(),
+                    active,
+                    None,
+                );
+                let mut ui = Simulator::with_size(Default::default(), (width, 800.0), page);
+                assert_eq!(ui.find(crate::tr!("start", "recent-documents")).is_ok(), recent);
+                for label in ["new-drawing", "new-from-template", "open-file"] {
+                    assert_eq!(ui.find(crate::i18n::loader().get_attr("start", label)).is_ok(), actions);
+                }
+                assert_eq!(ui.find(crate::tr!("action", "options")).is_ok(), actions);
+                for label in [
+                    "donate", "tutorials", "discussions", "supporters", "sponsors", "send-feedback",
+                ] {
+                    assert!(ui.find(crate::i18n::loader().get_attr("start", label)).is_err(), "{label}");
+                }
+                assert!(ui.find(crate::tr!("action", "plugins")).is_err());
+                assert_eq!(ui.find(crate::tr!("start", "welcome")).is_ok(), width == 560.0);
+            }
+        });
+    }
+
     /// The [+] step on the keep-recent-files box is built eagerly from an
     /// uncapped user string (`RecentLimitInput` keeps every ASCII digit):
     /// `18446744073709551615` parses to `usize::MAX`, and the plain
@@ -6246,12 +5703,6 @@ mod tests {
     #[test]
     fn recent_limit_plus_step_survives_an_overflowing_input() {
         let _ = start_page_content(
-            &[],
-            &[],
-            false,
-            &std::collections::HashMap::new(),
-            &[],
-            false,
             &[],
             &std::collections::HashMap::new(),
             50,

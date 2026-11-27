@@ -236,9 +236,7 @@ fn panel_measure_key_at(
 /// The id the whole ribbon (with the Quick Access row below it) reports its
 /// bounds under: floating panels snap to its bottom.
 const RIBBON_ID: &str = "ribbon_whole";
-/// The logo and the search box beside the tab row's quick-access and tabs
-/// block, which report their widths so the tabs center in the whole row.
-const TAB_ROW_LOGO_ID: &str = "ribbon_tab_row_logo";
+/// Bounds of the search box used to center tabs across the ribbon.
 const TAB_ROW_SEARCH_ID: &str = "ribbon_tab_row_search";
 /// The gap between the tab row's blocks, and the tab row's right padding.
 const TAB_ROW_GAP: f32 = 6.0;
@@ -423,8 +421,7 @@ pub struct Ribbon {
     /// Measured tab-bar height (28 on one row, 56 when tabs wrap). Written by
     /// the `WrapBar` widget during layout, read when anchoring dropdowns.
     tab_bar_h: Arc<AtomicU32>,
-    /// The room the logo and the search box take beside the tab row's
-    /// quick-access and tabs block, written while the row is laid out.
+    /// Room reserved beside the tabs for the search box and right padding.
     tab_span: CenterSpan,
     /// The width the quick-access and tabs block needs on one row (`f32`
     /// bits), as last laid out; 0 before the first layout. The search box
@@ -584,7 +581,7 @@ impl Ribbon {
             show_viewcube: true,
             show_ucs_icon: true,
             show_viewport_highlight: true,
-            show_properties: !cfg!(target_arch = "wasm32"),
+            show_properties: false,
             show_count_palette: false,
             show_sheet_set: false,
             show_graphic_attributes: false,
@@ -1362,10 +1359,8 @@ impl Ribbon {
 
     // ── View ──────────────────────────────────────────────────────────────
 
-    /// The ribbon. With `menu_row` (MENUBAR 1) the large logo spans the
-    /// menu row and the tab row; without it a compact logo starts the tab
-    /// row. A `closed` ribbon (RIBBONCLOSE) keeps the Quick Access buttons,
-    /// the logo and the search box, without the tabs and the tool area.
+    /// The search box shares the menu row when MENUBAR is enabled.
+    /// A closed ribbon keeps Quick Access and search available.
     #[allow(clippy::too_many_arguments)]
     pub fn view<'a>(
         &'a self,
@@ -1510,12 +1505,7 @@ impl Ribbon {
             .row_h(TAB_ROW_H)
             .center(self.layout.centered);
 
-        // Centered, the tabs sit in the middle of the whole ribbon, not of
-        // the room the logo and the search box leave them. Both have a fixed
-        // width, so they are laid out before the tabs block, and report how
-        // much room they take in the same pass: a search box that collapses
-        // or opens moves the tabs at once. With the menu row the large logo
-        // starts the ribbon and the tab row ends at its right padding.
+        // Include the search box and right padding when centering the tabs.
         let span = self.tab_span.clone();
         if menu_row.is_some() {
             span.after()
@@ -1525,17 +1515,6 @@ impl Ribbon {
             .store(menu_row.is_none(), Ordering::Relaxed);
         self.narrow_shown.store(self.narrow(), Ordering::Relaxed);
         let mut tab_row = row![].spacing(TAB_ROW_GAP).align_y(iced::Center);
-        if menu_row.is_none() {
-            // As far from the window's edge as the large logo's artwork; the
-            // button's 1 px border sits inside that.
-            let logo = container(self.logo_button(false)).padding(Padding {
-                left: app_menu::LOGO_PAD - 1.0,
-                ..Padding::ZERO
-            });
-            tab_row = tab_row.push(
-                PosReport::new(TAB_ROW_LOGO_ID, logo).report_width(span.before(), TAB_ROW_GAP),
-            );
-        }
         tab_row = tab_row.push(
             container(
                 WrapBar::new(lead, tabs.into())
@@ -1571,18 +1550,9 @@ impl Ribbon {
         let tab_bar = ribbon_menu::RightPress::for_target(ribbon_menu::MenuTarget::TabRow, tab_bar);
         let tab_bar = PosReport::new(minimize::TAB_BAR_ID, tab_bar);
         let top: Element<'a, Message> = match menu_row {
-            Some(menu_row) => row![
-                PosReport::new(
-                    TAB_ROW_LOGO_ID,
-                    container(self.logo_button(true)).style(|theme: &Theme| container::Style {
-                        background: Some(Background::Color(crate::ui::style::chrome::bar(theme))),
-                        ..Default::default()
-                    }),
-                )
-                .report_width(span.before(), 0.0),
-                column![self.with_search_box(menu_row), tab_bar].width(Fill),
-            ]
-            .into(),
+            Some(menu_row) => column![self.with_search_box(menu_row), tab_bar]
+                .width(Fill)
+                .into(),
             None => tab_bar.into(),
         };
         let mut ribbon = column![top];

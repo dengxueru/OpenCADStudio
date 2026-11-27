@@ -2,10 +2,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { applyStartupPreferences, applyLoadingStyle, webShellVersion, versionServiceWorker } = require('./web-startup-preferences.cjs');
+const { applyStartupPreferences, applyWebShellStyle, webShellVersion, versionServiceWorker } = require('./web-startup-preferences.cjs');
 const project = path.resolve(__dirname, '..');
 const deployed = process.env.DEPLOY_WEB_ROOT || 'D:/opencad-studio/web/app';
-const html = applyLoadingStyle(applyStartupPreferences(fs.readFileSync(path.join(deployed, 'index.html'), 'utf8')));
+const html = applyWebShellStyle(applyStartupPreferences(fs.readFileSync(path.join(deployed, 'index.html'), 'utf8')));
 const wasmName = html.match(/module_or_path:\s*'\/app\/([^']+)'/)?.[1];
 if (!wasmName) throw Error('Active WASM entry not found');
 const wasm = fs.readFileSync(path.join(deployed, wasmName));

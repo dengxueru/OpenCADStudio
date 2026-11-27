@@ -20,6 +20,19 @@ pub(super) fn fresh() -> OpenCADStudio {
 }
 
 #[test]
+fn new_drawing_starts_white_with_properties_closed_and_can_open_them() {
+    let mut app = OpenCADStudio::new_for_test();
+    let _ = app.update(Message::TabNew);
+    assert_eq!(app.tabs[app.active_tab].scene.bg_color, [1.0; 4]);
+    assert!(!app.show_properties);
+    assert!(!app.ribbon.show_properties);
+    let task = app.dispatch_command("PROPERTIES");
+    app.drive_headless_task(task).unwrap();
+    assert!(app.show_properties);
+    assert!(app.ribbon.show_properties);
+}
+
+#[test]
 fn blockpalette_pin_toggles_autocollapse_and_close_hides() {
     let mut app = fresh();
     app.show_block_palette = true;
@@ -1298,6 +1311,10 @@ fn visibility_ribbon_real_controls_disable_enable_and_open_manager() {
     with_stack(|| {
         use crate::ui::window::block_visibility::Action as A;
         let mut app = authoring_app();
+        app.ribbon.set_layout(crate::ui::ribbon::RibbonLayout {
+            minimize: crate::ui::ribbon::RibbonMinimize::Off,
+            ..app.ribbon.layout().clone()
+        });
         app.ribbon.set_block_editing(true);
         app.ribbon
             .set_collapse_mode(crate::ui::ribbon::CollapseMode::Compact);

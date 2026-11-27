@@ -131,12 +131,9 @@ Other exports still download (or go to `openCadStudioSaveFile`).
 
 ## Startup dialogs
 
-A dialog can be open when the page is ready. The donation prompt appears once per
-application version in each browser profile, so a fresh or disposable profile always
-sees it — unless the session is automated: the first control request drops a prompt
-that is still queued, and a host that sets `localStorage["opencadstudio.automation"]`
-to `"1"` before the page loads never gets one. A prompt already on screen stays. While a modal is open `state.modal` is set, and `{"op":"new"}` returns `ok`
-without creating a tab until the modal is closed. Close it first:
+A recovery dialog can be open when the page is ready. While `state.modal` is
+set, `{"op":"new"}` can return `ok` without creating a tab. Check the modal
+before creating the drawing.
 
 ```js
 const state = await control({ op: 'state' });

@@ -685,7 +685,7 @@ mod tests {
     #[test]
     fn a_hovered_tab_opens_after_the_delay_and_closes_after_leaving() {
         let mut ribbon = Ribbon::default();
-        ribbon.on_minimize(MinimizeMsg::Toggle, Instant::now());
+        ribbon.on_minimize(MinimizeMsg::SetPref(MinimizePref::Tabs), Instant::now());
         assert_eq!(ribbon.minimize(), RibbonMinimize::Tabs);
         let insert = tab(&ribbon, "insert");
         let t0 = Instant::now();
@@ -718,7 +718,7 @@ mod tests {
     #[test]
     fn moving_left_onto_a_neighbour_opens_it() {
         let mut ribbon = Ribbon::default();
-        ribbon.on_minimize(MinimizeMsg::Toggle, Instant::now());
+        ribbon.on_minimize(MinimizeMsg::SetPref(MinimizePref::Tabs), Instant::now());
         let draw = tab(&ribbon, "draw");
         let insert = tab(&ribbon, "insert");
         let t0 = Instant::now();
@@ -756,6 +756,8 @@ mod tests {
     #[test]
     fn a_double_click_on_a_tab_does_what_the_button_does() {
         let mut ribbon = Ribbon::default();
+        ribbon.layout.minimize = RibbonMinimize::Off;
+        ribbon.layout.minimize_pref = MinimizePref::Tabs;
         let draw = tab(&ribbon, "draw");
         let t0 = Instant::now();
         assert!(!ribbon.click_tab(draw, t0));
@@ -771,8 +773,7 @@ mod tests {
     #[test]
     fn a_panel_title_click_toggles_its_popup() {
         let mut ribbon = Ribbon::default();
-        ribbon.layout.minimize_pref = MinimizePref::PanelTitles;
-        ribbon.on_minimize(MinimizeMsg::Toggle, Instant::now());
+        assert_eq!(ribbon.layout.minimize_pref, MinimizePref::PanelTitles);
         assert_eq!(ribbon.minimize(), RibbonMinimize::PanelTitles);
         let now = Instant::now();
         ribbon.on_minimize(MinimizeMsg::Click(Opener::Panel("Draw")), now);

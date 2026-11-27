@@ -1,25 +1,15 @@
-//! The logo button at the top left of the window and the application menu
-//! it opens: the file commands, Options and the recent drawings.
+//! File commands, Options and recent drawings in the application menu.
 
 use std::path::PathBuf;
 
-use iced::widget::button;
-use iced::{Background, Border, Color, Element, Padding, Theme};
+use iced::Element;
 
 use super::{minimize::MINIMIZE_MENU_ID, Ribbon};
 use crate::app::Message;
 use crate::ui::icons;
-use crate::ui::style::chrome;
-use crate::ui::wrap_bar::PosReport;
 
 /// The application menu's dropdown id.
 pub const APP_MENU_ID: &str = "APP_MENU";
-/// The large logo, with its padding, beside the menu row and the tab row.
-const LOGO: f32 = 38.0;
-pub(super) const LOGO_PAD: f32 = 6.0;
-/// The compact logo at the start of the tab row.
-const COMPACT_W: f32 = 38.0;
-const COMPACT_H: f32 = 18.0;
 const MENU_W: f32 = 300.0;
 /// How many recent drawings the menu lists.
 const RECENT_LIMIT: usize = 9;
@@ -38,50 +28,6 @@ impl Ribbon {
             self.close_dropdown();
         }
         open
-    }
-
-    /// The logo button that opens the application menu: `big` beside the
-    /// menu row and the tab row, else compact (its letters only) at the
-    /// start of the tab row.
-    pub fn logo_button(&self, big: bool) -> Element<'_, Message> {
-        let open = self.open_dropdown.as_deref() == Some(APP_MENU_ID);
-        let (logo, padding, radius) = if big {
-            (icons::logo(false, LOGO, LOGO), Padding::new(LOGO_PAD), 0.0)
-        } else {
-            (
-                icons::logo(true, COMPACT_W - 8.0, COMPACT_H - 6.0),
-                Padding::from([3.0, 4.0]),
-                3.0,
-            )
-        };
-        let logo = button(logo)
-            .on_press(Message::ToggleRibbonDropdown(APP_MENU_ID.to_string()))
-            .padding(padding)
-            .style(move |theme: &Theme, status| {
-                // A pointer on it outlines it and lifts its fill a little.
-                let lit =
-                    open || matches!(status, button::Status::Hovered | button::Status::Pressed);
-                let fill = match (big, lit) {
-                    (true, false) => None,
-                    (true, true) => Some(chrome::title_bar(theme)),
-                    (false, false) => Some(chrome::page(theme)),
-                    (false, true) => Some(chrome::bar(theme)),
-                };
-                button::Style {
-                    background: fill.map(Background::Color),
-                    border: Border {
-                        color: if lit {
-                            chrome::border(theme)
-                        } else {
-                            Color::TRANSPARENT
-                        },
-                        width: 1.0,
-                        radius: radius.into(),
-                    },
-                    ..Default::default()
-                }
-            });
-        PosReport::new(APP_MENU_ID, logo).into()
     }
 
     /// The application menu under the logo: the file commands and Options,

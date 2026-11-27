@@ -11,6 +11,7 @@
     <style id="web-loading-style">
       html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
       canvas { display: block; }
+      [data-canvas-pointer-focus] canvas[tabindex]:focus { outline: none; }
       #loading {
         position: fixed;
         inset: 0;
@@ -39,6 +40,20 @@
       }
       @keyframes ocs-spin { to { transform: rotate(360deg); } }
     </style>
+    <script id="canvas-pointer-focus">
+      // A click can leave the already focused canvas matching :focus-visible.
+      // Hide its outline after pointer input and restore it for Tab navigation.
+      document.addEventListener("pointerdown", (event) => {
+        if (event.target instanceof HTMLCanvasElement && event.target.tabIndex >= 0) {
+          document.documentElement.setAttribute("data-canvas-pointer-focus", "");
+        }
+      }, true);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Tab") {
+          document.documentElement.removeAttribute("data-canvas-pointer-focus");
+        }
+      }, true);
+    </script>
     <link data-trunk rel="rust" data-bin="OpenCADStudio" />
     <link data-trunk rel="copy-dir" href="web/fonts" />
     <link data-trunk rel="copy-file" href="web/ocs-parse-worker.js" />
@@ -56,21 +71,6 @@
       <div class="sub">Loading…</div>
     </div>
     <script src="ocs-control.js" defer></script>
-    <script id="ribbon-defaults">
-      (() => {
-        try {
-          const key = "opencadstudio.settings";
-          const config = JSON.parse(localStorage.getItem(key) ?? "{}");
-          if (!config || typeof config !== "object" || Array.isArray(config)) return;
-          const ribbon = config.ribbon ??= {};
-          if (typeof ribbon !== "object" || Array.isArray(ribbon)) return;
-          if (ribbon.minimize != null && ribbon.minimize_pref != null) return;
-          ribbon.minimize ??= "PanelTitles";
-          ribbon.minimize_pref ??= "PanelTitles";
-          localStorage.setItem(key, JSON.stringify(config));
-        } catch {}
-      })();
-    </script>
     <script>
       // Offline support: register the service worker. It is copied next to
       // this page by Trunk (see the copy-file link in <head>), so the

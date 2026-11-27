@@ -866,6 +866,18 @@ mod tests {
     }
 
     #[test]
+    fn retired_start_sections_restore_recent_files() {
+        for section in ["Videos", "Discussions", "Supporters"] {
+            let config: AppConfig = serde_json::from_value(serde_json::json!({
+                "start": { "section": section },
+                "ribbon": { "minimize": "Tabs" },
+            })).unwrap();
+            assert_eq!(config.start.section, super::super::StartSection::Recent);
+            assert_eq!(config.ribbon.layout.minimize, crate::ui::ribbon::RibbonMinimize::Tabs);
+        }
+    }
+
+    #[test]
     fn ribbon_layout_defaults_and_round_trips() {
         use crate::ui::ribbon::{MinimizePref, RibbonMinimize};
 
@@ -874,6 +886,8 @@ mod tests {
         let old: AppConfig =
             serde_json::from_str(r#"{"ribbon":{"collapse":"Compact"}}"#).expect("old config");
         assert!(old.ribbon.layout == RibbonLayout::default());
+        assert_eq!(old.ribbon.layout.minimize, RibbonMinimize::PanelTitles);
+        assert_eq!(old.ribbon.layout.minimize_pref, MinimizePref::PanelTitles);
         assert!(old.ribbon.layout.show_panel_titles);
         assert!(old.ribbon.layout.search_expanded);
 
@@ -886,7 +900,7 @@ mod tests {
             vec!["draw/Modify".into(), "draw/Draw".into()],
         );
         layout.show_panel_titles = false;
-        layout.minimize = RibbonMinimize::PanelTitles;
+        layout.minimize = RibbonMinimize::Off;
         layout.minimize_pref = MinimizePref::Tabs;
         layout.pinned_slideouts.insert("draw/Draw".into());
         layout.search_expanded = false;
@@ -895,7 +909,7 @@ mod tests {
         // The fields sit directly in the ribbon section.
         let value: serde_json::Value = serde_json::from_str(&serialized).expect("json");
         assert_eq!(value["ribbon"]["hidden_tabs"][0], "manage");
-        assert_eq!(value["ribbon"]["minimize"], "PanelTitles");
+        assert_eq!(value["ribbon"]["minimize"], "Off");
         assert_eq!(value["ribbon"]["search_expanded"], false);
         let restored: AppConfig = serde_json::from_str(&serialized).expect("deserialize config");
         assert!(restored.ribbon == original.ribbon);

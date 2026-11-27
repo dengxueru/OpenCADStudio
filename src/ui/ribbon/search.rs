@@ -822,7 +822,7 @@ impl Ribbon {
         }
     }
 
-    /// Whether the tab row holds the logo, the quick-access toolbar and the
+    /// Whether the tab row holds the quick-access toolbar and the
     /// tabs (at the width they last needed) and the full box, in the window
     /// as wide as it is now; `None` before the first layout or with the box
     /// in the menu row. The widths do not depend on the box, so the answer
@@ -836,8 +836,7 @@ impl Ribbon {
         if flow.is_nan() {
             return None;
         }
-        let (logo, _) = self.tab_span.insets();
-        Some(logo + flow + super::TAB_ROW_GAP + BOX_W + super::TAB_BAR_PAD_RIGHT <= self.win_w)
+        Some(flow + super::TAB_ROW_GAP + BOX_W + super::TAB_BAR_PAD_RIGHT <= self.win_w)
     }
 
     /// Whether the last view's choice between the box and its magnifier no
@@ -1484,6 +1483,7 @@ mod tests {
     #[test]
     fn picking_a_ribbon_result_shows_its_tab_and_blinks_its_button() {
         let mut ribbon = Ribbon::new();
+        ribbon.layout.minimize = super::super::RibbonMinimize::Off;
         let now = Instant::now();
         let _ = ribbon.on_search(SearchMsg::Input("attach".into()), now);
         // A button on another tab than the one on show.
@@ -1668,7 +1668,7 @@ mod tests {
             layout.qat_below = true;
             ribbon.set_layout(layout);
             ribbon.set_window_size((900.0, 900.0));
-            // Closed, the tab row holds only the logo and the box: measured
+            // Closed, the tab row holds only the search box: measured
             // empty, not unmeasured, so `NARROW` does not decide.
             let _ui = iced_test::simulator::Simulator::with_size(
                 iced::Settings::default(),
@@ -1696,15 +1696,13 @@ mod tests {
 
             // Room for everything but the full box.
             let flow = f32::from_bits(ribbon.tab_flow_natural.load(Ordering::Relaxed));
-            let (logo, _) = ribbon.tab_span.insets();
-            let width = logo
-                + flow
+            let width = flow
                 + super::super::TAB_ROW_GAP
                 + MAGNIFIER_W
                 + super::super::TAB_BAR_PAD_RIGHT
                 + 40.0;
             assert!(width > NARROW, "the window is not narrow: {width}");
-            assert!(width < logo + flow + BOX_W, "the box does not fit: {width}");
+            assert!(width < flow + BOX_W, "the box does not fit: {width}");
             ribbon.set_window_size((width, 900.0));
             assert!(!ribbon.shows_box(), "the box collapses to its magnifier");
             assert_eq!(
@@ -1732,9 +1730,8 @@ mod tests {
 
             // Below `NARROW`, yet the tab row holds the tabs and the box.
             let flow = f32::from_bits(ribbon.tab_flow_natural.load(Ordering::Relaxed));
-            let (logo, _) = ribbon.tab_span.insets();
             let room =
-                logo + flow + super::super::TAB_ROW_GAP + BOX_W + super::super::TAB_BAR_PAD_RIGHT;
+                flow + super::super::TAB_ROW_GAP + BOX_W + super::super::TAB_BAR_PAD_RIGHT;
             let width = room + 10.0;
             assert!(
                 width < NARROW,
