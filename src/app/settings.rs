@@ -1076,10 +1076,6 @@ pub struct UserSettings {
     // Ortho ($ORTHOMODE) and the running OSNAP set ($OSMODE) are per-drawing —
     // stored in the document header, not here (they used to be persisted app-
     // globally, which duplicated the file's own state).
-    /// Whether the one-time "make Open CAD Studio the default for .dwg/.dxf?"
-    /// prompt has already been shown. Set once the user answers (either way),
-    /// so we never nag again on subsequent launches.
-    pub default_assoc_prompted: bool,
     /// Offer to download missing `.shx` fonts from the community repository
     /// when a drawing opens (see `crate::io::font_repo`).
     #[serde(default = "default_check_missing_fonts")]
@@ -1604,7 +1600,6 @@ impl Default for UserSettings {
             iso_plane: IsoPlane::Left,
             snap_angle_deg: 0.0,
             otrack: false,
-            default_assoc_prompted: false,
             check_missing_fonts: true,
             font_source_url: String::new(),
             qnew_template: String::new(),

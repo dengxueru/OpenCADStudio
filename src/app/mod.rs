@@ -2055,8 +2055,6 @@ pub(super) struct OpenCADStudio {
     /// Tracked separately from the PDSIZE sign so a size of 0 (sign-less) still
     /// remembers which radio is active.
     point_size_relative: bool,
-    /// Whether the default-association prompt has been answered.
-    default_assoc_prompted: bool,
     /// Offer to download missing `.shx` fonts on open (see `io::font_repo`).
     check_missing_fonts: bool,
     /// Custom font source base URL; empty selects the community repository.
@@ -3547,8 +3545,6 @@ pub enum ModalKind {
     FileInUse,
     #[cfg(not(target_arch = "wasm32"))]
     ExternalChange,
-    #[cfg_attr(target_arch = "wasm32", allow(dead_code))]
-    AssocPrompt,
     PointStyle,
     AttributeEditor,
     LayerDeleteWarning,
@@ -5935,13 +5931,6 @@ pub enum Message {
     /// The process was asked to stop (SIGTERM).
     #[cfg(not(target_arch = "wasm32"))]
     Terminate,
-    /// First-launch default-association prompt: user accepted — register this
-    /// app as the default handler for .dwg / .dxf.
-    AssocPromptYes,
-    /// First-launch default-association prompt: user declined (or "not now").
-    AssocPromptNo,
-    /// Result of the platform default-association call.
-    AssocResult(Result<String, String>),
     // ── Plot / Export ─────────────────────────────────────────────────────
     /// Show the SVG save-file dialog and trigger export.
     PlotExport,
@@ -6974,7 +6963,6 @@ impl OpenCADStudio {
             point_style_tab_id: None,
             point_mode_buf: None,
             point_size_relative: true,
-            default_assoc_prompted: false,
             check_missing_fonts: true,
             font_source_url: String::new(),
             qnew_template: String::new(),
@@ -7660,7 +7648,6 @@ impl OpenCADStudio {
         // Startup command script: if files were passed to open, defer the
         // script lines until the document finishes opening. Otherwise, dispatch
         // them on the newly created drawing tab.
-        let has_script = !cfg.script_lines.is_empty();
         let script: Task<Message> = if cfg.script_lines.is_empty() {
             Task::none()
         } else if has_files {
@@ -7673,10 +7660,6 @@ impl OpenCADStudio {
         // Unsaved drawings a crashed session left behind.
         #[cfg(not(target_arch = "wasm32"))]
         s.recover_ended_session_autosaves();
-        // An unattended script must not stop at a startup dialog.
-        if !has_script {
-            s.queue_startup_prompts();
-        }
         // Recent-file thumbnails: decoded off-thread — parsing every recent
         // DWG's preview on the boot path held the first frame back.
         let thumbs_fetch = s.refresh_recent_thumbs();
@@ -7704,7 +7687,6 @@ impl OpenCADStudio {
             s.control.enabled = crate::io::host_bridge::is_automation_allowed();
             crate::io::host_bridge::install();
         }
-        s.queue_startup_prompts();
         let focus = s.focus_cmd_input();
         let primary_font =
             crate::scene::text::web_font::preload_language(&crate::i18n::active_language_tag());

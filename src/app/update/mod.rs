@@ -372,7 +372,6 @@ impl OpenCADStudio {
             // Dismissing these via ✕ is the cancel/decline path.
             Some(Unsaved) => self.pending_close = None,
             Some(BlockEditChanges) => self.cancel_block_edit_close(),
-            Some(AssocPrompt) => self.mark_assoc_prompted(),
             // Cancel: leave the layer (and its objects) untouched.
             Some(LayerDeleteWarning) => self.layer_delete_pending = None,
             // ✕ is Cancel: what was not applied is taken back.
@@ -14855,32 +14854,6 @@ impl OpenCADStudio {
                 Task::none()
             }
 
-            Message::AssocPromptYes => {
-                self.file_assoc_enabled = true;
-                self.mark_assoc_prompted();
-                self.close_active_modal();
-                // set_default_app registers the handler first, then makes us the
-                // default — boot no longer does this automatically.
-                Task::perform(
-                    crate::io::file_association::set_default_app(),
-                    Message::AssocResult,
-                )
-            }
-            Message::AssocPromptNo => {
-                self.file_assoc_enabled = false;
-                self.mark_assoc_prompted();
-                self.close_active_modal();
-                Task::none()
-            }
-            Message::AssocResult(result) => {
-                match result {
-                    Ok(msg) => self.command_line.push_info(&msg),
-                    Err(err) => self
-                        .command_line
-                        .push_error(crate::tf!("Could not set default app: {err}").as_ref()),
-                }
-                Task::none()
-            }
             Message::PlotDialogOpen => self.on_plot_dialog_open(),
             Message::PlotDlg(m) => self.on_plot_dlg(m),
             Message::BlockPalette(m) => self.on_block_palette(m),

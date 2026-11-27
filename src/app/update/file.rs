@@ -1066,7 +1066,6 @@ impl OpenCADStudio {
             iso_plane: self.iso_plane,
             snap_angle_deg: self.snap_angle_deg,
             otrack: self.snapper.otrack_enabled,
-            default_assoc_prompted: self.default_assoc_prompted,
             check_missing_fonts: self.check_missing_fonts,
             font_source_url: self.font_source_url.clone(),
             qnew_template: self.qnew_template.clone(),
@@ -1318,7 +1317,6 @@ impl OpenCADStudio {
         // Ortho + running OSNAP are per-drawing (adopted from the header on
         // open / tab switch), not app-global, so they are not applied here.
         self.snapper.otrack_enabled = s.otrack;
-        self.default_assoc_prompted = s.default_assoc_prompted;
         self.check_missing_fonts = s.check_missing_fonts;
         self.font_source_url = s.font_source_url.clone();
         self.qnew_template = s.qnew_template.clone();
@@ -1955,13 +1953,6 @@ impl OpenCADStudio {
             tab.scene
                 .request_refresh(crate::scene::ViewportRefreshScope::All);
         }
-    }
-
-    /// Record that the one-time default-association prompt has been answered and
-    /// flush it to disk, so the dialog never reappears on later launches.
-    pub(in crate::app) fn mark_assoc_prompted(&mut self) {
-        self.default_assoc_prompted = true;
-        self.persist_settings_if_changed();
     }
 
     pub(super) fn on_open_file(&mut self) -> Task<Message> {

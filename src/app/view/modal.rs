@@ -142,7 +142,6 @@ impl OpenCADStudio {
                 crate::ui::style::mleaderstyle::title(&self.mls, &self.mleaderstyle_selected)
             }
             Some(K::DimStyle) => crate::ui::style::dimstyle::title(&self.dsd),
-            Some(K::AssocPrompt) => crate::tr!("modal", "default-application"),
             Some(K::AecDropWarning) => crate::tr!("modal", "save-warning"),
             Some(K::ConversionLoss) => crate::tr!("modal", "save-warning"),
             Some(K::IfccadAlphaWarning) => crate::tr!("ifccad-ui", "alpha-title"),
@@ -1681,7 +1680,6 @@ impl OpenCADStudio {
             super::super::ModalKind::DimStyle => sized_flow(ex, 980, 660, |flow| {
                 crate::ui::style::dimstyle::view_window(self.dim_style_view(), flow)
             }),
-            super::super::ModalKind::AssocPrompt => automatic_flow(ex, default_assoc_dialog_window),
             super::super::ModalKind::GpuWarning => sized_flow(ex, 520, 400, |flow| {
                 gpu_warning_window(&self.gpu_status, flow)
             }),
@@ -2700,38 +2698,6 @@ fn gpu_warning_window(
                     button::secondary
                 ),
             ],
-        ]
-        .spacing(0),
-    )
-    .style(dialog_body_style)
-    .center_x(sizing.width)
-    .center_y(sizing.height)
-    .padding([24, 28])
-    .into()
-}
-
-/// One-time default application prompt.
-fn default_assoc_dialog_window(sizing: crate::ui::modal::ModalSizing) -> Element<'static, Message> {
-    container(
-        column![
-            text(t!("Make Open CAD Studio your default CAD app?"))
-                .size(15),
-            iced::widget::Space::new().height(10),
-            text(t!("Open .dwg and .dxf drawings in Open CAD Studio by default. You can change this later in your system settings."))
-                .size(12)
-                .style(dialog_muted_text_style),
-            iced::widget::Space::new().height(22),
-            row![
-                iced::widget::Space::new().width(Fit),
-                dialog_button(t!("Not now"), Message::AssocPromptNo, button::secondary),
-                iced::widget::Space::new().width(8),
-                dialog_button(
-                    t!("Yes, set as default"),
-                    Message::AssocPromptYes,
-                    button::primary
-                ),
-            ]
-            .align_y(iced::Center),
         ]
         .spacing(0),
     )

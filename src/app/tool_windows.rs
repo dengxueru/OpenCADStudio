@@ -42,7 +42,6 @@ impl ModalKind {
             | K::Options
             | K::XrefHelp
             | K::GpuWarning
-            | K::AssocPrompt
             | K::Unsaved
             | K::BlockEditChanges
             | K::SaveDialog
@@ -78,7 +77,6 @@ impl ModalKind {
             K::Unsaved
             | K::BlockEditChanges
             | K::SaveDialog
-            | K::AssocPrompt
             | K::RecoveryPrompt
             | K::ConversionLoss
             | K::AecDropWarning

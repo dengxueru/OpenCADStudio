@@ -1,6 +1,4 @@
-//! "Make Open CAD Studio the default for .dwg / .dxf" — the platform-specific
-//! plumbing behind the one-time first-launch prompt (see `app::update`'s
-//! `AssocPrompt*` handlers).
+//! Platform-specific registration and default selection for DWG and DXF files.
 //!
 //! Each OS guards default file associations differently, so there is no single
 //! cross-platform call:

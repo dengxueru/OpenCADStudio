@@ -101,9 +101,9 @@ The MCP server is a client of the desktop editor: `ocs_sessions` lists the live
 editor sessions found in the configuration directory and starts one when none
 is running, so several MCP connections can share one editor and its state.
 
-A fresh profile can show the file-association dialog before the first drawing.
-While a startup dialog is open, `{"op":"new"}` can answer `ok` without creating
-a tab. Check the reported modal before creating the drawing.
+While a startup dialog such as a graphics warning is open, `{"op":"new"}` can
+answer `ok` without creating a tab. Check the reported modal before creating
+the drawing.
 
 ```python
 while (info := sessions())["modal"]:

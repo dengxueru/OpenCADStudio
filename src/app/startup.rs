@@ -2,30 +2,17 @@ use super::{ModalKind, OpenCADStudio};
 use crate::scene::pipeline::{GpuAdapter, GpuStatus};
 
 impl OpenCADStudio {
-    pub(super) fn queue_startup_prompts(&mut self) {
-        if crate::config::managed() {
-            return;
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if !self.default_assoc_prompted {
-            self.pending_startup_modals
-                .push_back(ModalKind::AssocPrompt);
-        }
-        self.show_next_startup_modal();
-    }
-
     pub(super) fn show_next_startup_modal(&mut self) {
         // One startup prompt at a time, also while the shown one sits open
         // beside the drawing.
-        let showing = self.tool_windows.iter().any(|tool| {
-            matches!(
-                tool.kind,
-                ModalKind::AssocPrompt | ModalKind::GpuWarning
-            )
-        }) || self
-            .pending_startup_modals
-            .front()
-            .is_some_and(|kind| self.tool_open(*kind));
+        let showing = self
+            .tool_windows
+            .iter()
+            .any(|tool| tool.kind == ModalKind::GpuWarning)
+            || self
+                .pending_startup_modals
+                .front()
+                .is_some_and(|kind| self.tool_open(*kind));
         if self.active_modal.is_none()
             && !showing
             && self.opening.is_none()
@@ -202,25 +189,25 @@ mod tests {
     }
 
     #[test]
-    fn startup_skips_donation_for_fresh_and_existing_settings() {
+    fn legacy_first_launch_flags_do_not_prompt_or_change_file_association() {
         let mut app = OpenCADStudio::new_for_test();
-        app.default_assoc_prompted = true;
-        for version in ["", "previous-release"] {
-            app.donation_prompt_version = version.into();
-            app.queue_startup_prompts();
+        for file_assoc_enabled in [false, true] {
+            let config: AppConfig = serde_json::from_value(serde_json::json!({
+                "settings": {
+                    "default_assoc_prompted": !file_assoc_enabled,
+                    "donation_prompt_version": "previous-release",
+                    "file_assoc_enabled": file_assoc_enabled,
+                }
+            }))
+            .unwrap();
+            app.apply_config(config);
+            app.show_next_startup_modal();
             assert!(app.active_modal.is_none());
             assert!(app.pending_startup_modals.is_empty());
+            assert_eq!(
+                app.current_config().settings.file_assoc_enabled,
+                file_assoc_enabled
+            );
         }
-    }
-
-    #[test]
-    fn declining_the_first_launch_association_prompt_clears_the_queue() {
-        let mut app = OpenCADStudio::new_for_test();
-        app.apply_config(AppConfig::default());
-        app.queue_startup_prompts();
-        assert_eq!(app.active_modal, Some(ModalKind::AssocPrompt));
-        let _ = app.update(Message::AssocPromptNo);
-        assert!(app.active_modal.is_none());
-        assert!(app.pending_startup_modals.is_empty());
     }
 }
