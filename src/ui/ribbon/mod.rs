@@ -584,7 +584,7 @@ impl Ribbon {
             show_viewcube: true,
             show_ucs_icon: true,
             show_viewport_highlight: true,
-            show_properties: true,
+            show_properties: !cfg!(target_arch = "wasm32"),
             show_count_palette: false,
             show_sheet_set: false,
             show_graphic_attributes: false,

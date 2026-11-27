@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#1e1e1e" />
     <title></title>
     <script id="openaec-analytics-loader" src="https://open-aec.com/shared/analytics.js?v=20261026" defer></script>
-    <style>
-      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #1e1e1e; }
+    <style id="web-loading-style">
+      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
       canvas { display: block; }
       #loading {
         position: fixed;
@@ -19,8 +19,8 @@
         align-items: center;
         justify-content: center;
         gap: 22px;
-        background: #1e1e1e;
-        color: #cfcfcf;
+        background: #fff;
+        color: #242424;
         font-family: system-ui, sans-serif;
         z-index: 9999;
         transition: opacity 0.4s ease;
@@ -28,11 +28,11 @@
       #loading.hide { opacity: 0; pointer-events: none; }
       #loading .title { font-size: 22px; font-weight: 600; letter-spacing: 0.5px; }
       #loading .title span { color: #3399e6; }
-      #loading .sub { font-size: 12px; color: #777; }
+      #loading .sub { font-size: 12px; color: #595959; }
       #loading .spinner {
         width: 46px;
         height: 46px;
-        border: 4px solid #2e2e2e;
+        border: 4px solid #e2e8ee;
         border-top-color: #3399e6;
         border-radius: 50%;
         animation: ocs-spin 0.9s linear infinite;
@@ -56,6 +56,21 @@
       <div class="sub">Loading…</div>
     </div>
     <script src="ocs-control.js" defer></script>
+    <script id="ribbon-defaults">
+      (() => {
+        try {
+          const key = "opencadstudio.settings";
+          const config = JSON.parse(localStorage.getItem(key) ?? "{}");
+          if (!config || typeof config !== "object" || Array.isArray(config)) return;
+          const ribbon = config.ribbon ??= {};
+          if (typeof ribbon !== "object" || Array.isArray(ribbon)) return;
+          if (ribbon.minimize != null && ribbon.minimize_pref != null) return;
+          ribbon.minimize ??= "PanelTitles";
+          ribbon.minimize_pref ??= "PanelTitles";
+          localStorage.setItem(key, JSON.stringify(config));
+        } catch {}
+      })();
+    </script>
     <script>
       // Offline support: register the service worker. It is copied next to
       // this page by Trunk (see the copy-file link in <head>), so the

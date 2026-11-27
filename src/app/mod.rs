@@ -6873,7 +6873,7 @@ impl OpenCADStudio {
             render_bar_w: std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0)),
             render_mode_menu_open: false,
             render_mode_preview: None,
-            show_properties: true,
+            show_properties: !cfg!(target_arch = "wasm32"),
             show_layers: false,
             show_graphic_attributes: false,
             show_command_history: false,
@@ -7144,8 +7144,8 @@ impl OpenCADStudio {
             })
             .ok(),
             plotstyle_panel_baseline: None,
-            // Color scheme (default: Oxocarbon)
-            active_theme: Theme::Oxocarbon,
+            // Color scheme
+            active_theme: config::DEFAULT_UI_THEME,
             ui_theme: config::UiThemeConfig::default(),
             theme_color_inputs: config::UiThemePalette::default().hex_values(),
             model_space: config::ModelSpaceThemeConfig::default(),
@@ -8050,7 +8050,19 @@ pub fn run_web() -> iced::Result {
     .title(|_state: &OpenCADStudio| {
         String::new()
     })
-    .theme(|state: &OpenCADStudio| state.active_theme.clone())
+    .theme(|state: &OpenCADStudio| {
+        thread_local! {
+            static WEB_LIGHT: iced::Theme = {
+                let mut seed = iced::Theme::Light.seed();
+                seed.primary = iced::Color::from_rgb8(107, 203, 242);
+                iced::Theme::custom("Light", seed)
+            };
+        }
+        match &state.active_theme {
+            iced::Theme::Light => WEB_LIGHT.with(Clone::clone),
+            theme => theme.clone(),
+        }
+    })
     .backend(iced::Backend::Hardware(iced::backend::Api::OpenGL))
     // No MSAA for canvas geometry: WebGL resolves the multisampled target with
     // the last draw's scissor still on, so only that rectangle came through.

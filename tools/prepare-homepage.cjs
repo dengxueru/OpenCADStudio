@@ -1,5 +1,6 @@
 const fs=require('fs');
 const crypto=require('crypto');
+const { applyStartupPreferences, applyLoadingStyle } = require('./web-startup-preferences.cjs');
 const base='D:/opencad-studio/web/app/';
 const wasm=fs.readFileSync('D:/opencad/dist/OpenCADStudio-local-homepage-v2.wasm');
 const name='OpenCADStudio-local-'+crypto.createHash('sha256').update(wasm).digest('hex').slice(0,12)+'.wasm';
@@ -30,16 +31,10 @@ for (const resource of ['locale-labels.json','app.webmanifest']) {
 html=html.replace('      <div class="title">Open <span>CAD</span> Studio</div>\n','');
 html=html.replaceAll('OpenCADStudio-7256480aa17966fc_bg.wasm',name);
 html=html.replace('sha384-prkeN1cNPz3QsisOkKRqQMmdl4Bk1xvtF7s0sVWNdDJ4tonYrwz/o5+P5ramrh5H','sha384-'+crypto.createHash('sha384').update(wasm).digest('base64'));
-html=html.replace('<script type="module">',`<script>
-// Local deployment: suppress the version-specific donation prompt only.
-try {
-  const key = 'opencadstudio.settings';
-  const config = JSON.parse(localStorage.getItem(key) || '{}');
-  config.settings = config.settings || {};
-  config.settings.donation_prompt_version = '2026.46';
-  localStorage.setItem(key, JSON.stringify(config));
-} catch (error) { console.warn('Unable to persist donation preference:', error); }
-</script>
-<script type="module">`);
+html = applyLoadingStyle(applyStartupPreferences(html));
+const webApp = fs.readFileSync('D:/opencad/web-app.html', 'utf8');
+const ribbonDefaults = webApp.match(/<script id="ribbon-defaults">[\s\S]*?<\/script>/)?.[0];
+if (!ribbonDefaults) throw Error('Ribbon defaults script not found in web-app.html');
+html = html.replace('<script type="module">', `${ribbonDefaults}\n<script type="module">`);
 fs.writeFileSync('D:/opencad/dist/index.html',html);
 console.log('Prepared entry page with matching WASM integrity.');

@@ -121,6 +121,8 @@ pub enum DockSide {
     Right,
 }
 
+pub(super) const DEFAULT_UI_THEME: iced::Theme = iced::Theme::Light;
+
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct UiThemeConfig {
@@ -130,10 +132,9 @@ pub struct UiThemeConfig {
 
 impl Default for UiThemeConfig {
     fn default() -> Self {
-        let theme = iced::Theme::Oxocarbon;
         Self {
-            name: theme.to_string(),
-            palette: UiThemePalette::from_iced(theme.seed()),
+            name: DEFAULT_UI_THEME.to_string(),
+            palette: UiThemePalette::default(),
         }
     }
 }
@@ -145,7 +146,7 @@ impl UiThemeConfig {
         } else if self.name.eq_ignore_ascii_case("System") {
             resolve_system_theme()
         } else {
-            builtin_theme(&self.name).unwrap_or(iced::Theme::Oxocarbon)
+            builtin_theme(&self.name).unwrap_or(DEFAULT_UI_THEME)
         }
     }
 }
@@ -226,7 +227,7 @@ pub struct UiThemePalette {
 
 impl Default for UiThemePalette {
     fn default() -> Self {
-        Self::from_iced(iced::Theme::Oxocarbon.seed())
+        Self::from_iced(DEFAULT_UI_THEME.seed())
     }
 }
 
@@ -694,9 +695,20 @@ mod tests {
     use super::*;
 
     #[test]
+    fn missing_theme_defaults_to_light_and_saved_theme_is_used() {
+        let cfg: AppConfig = serde_json::from_str("{}").unwrap();
+        assert_eq!(cfg.theme.to_iced(), iced::Theme::Light);
+        assert_eq!(
+            cfg.model_space.resolve_model_bg(&cfg.theme.to_iced()),
+            [1.0, 1.0, 1.0, 1.0],
+        );
+
+        let saved: AppConfig = serde_json::from_str(r#"{"theme":{"name":"Oxocarbon"}}"#).unwrap();
+        assert_eq!(saved.theme.to_iced(), iced::Theme::Oxocarbon);
+    }
+
+    #[test]
     fn system_scheme_resolves_to_a_concrete_theme_and_keeps_its_name() {
-        // Fresh configs keep the existing default; SYSTEM is opt-in.
-        assert_ne!(UiThemeConfig::default().name, "System");
         let mut cfg = UiThemeConfig::default();
         cfg.name = "System".to_string();
         let resolved = cfg.to_iced();
