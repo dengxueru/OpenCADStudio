@@ -14855,22 +14855,6 @@ impl OpenCADStudio {
                 Task::none()
             }
 
-            Message::UpdateCheckManual(latest) => {
-                let message = match latest {
-                    Some(info) => crate::tr!(
-                        "view",
-                        "upstream-release-found",
-                        version = info.version
-                    ),
-                    None => crate::tr!(
-                        "view",
-                        "no-newer-release",
-                        version = env!("OCS_APP_VERSION")
-                    ),
-                };
-                self.command_line.push_output(&message);
-                Task::none()
-            }
             Message::AssocPromptYes => {
                 self.file_assoc_enabled = true;
                 self.mark_assoc_prompted();

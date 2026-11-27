@@ -401,21 +401,6 @@ impl OpenCADStudio {
                 return Some(self.unfocus_widgets());
             }
 
-            // Report the result in the command line.
-            "CHECKFORUPDATES" => {
-                if cfg!(target_arch = "wasm32") {
-                    self.command_line
-                        .push_output(&crate::tr!("view", "web-always-latest"));
-                    return Some(Task::none());
-                }
-                self.command_line
-                    .push_info(&crate::tr!("view", "checking-for-updates"));
-                return Some(Task::perform(
-                    crate::io::update_check::check_for_update(),
-                    Message::UpdateCheckManual,
-                ));
-            }
-
             "PLUGINS" | "PLUGINMANAGER" | "APPLOAD" => {
                 return Some(Task::done(Message::PluginManagerOpen));
             }

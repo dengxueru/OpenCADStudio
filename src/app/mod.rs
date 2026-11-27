@@ -5932,8 +5932,6 @@ pub enum Message {
     OsWindowScale(window::Id, f32),
     /// Suppress menu-root tooltips between clicking the root and leaving it.
     StatusMenuTooltipHidden(bool),
-    /// The result of a manual update check, displayed in the command line.
-    UpdateCheckManual(Option<crate::io::update_check::UpdateInfo>),
     /// The process was asked to stop (SIGTERM).
     #[cfg(not(target_arch = "wasm32"))]
     Terminate,
