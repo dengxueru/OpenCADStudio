@@ -1000,14 +1000,10 @@ pub fn start_allowed(cmd: &str) -> bool {
             | "OPEN"
             | "EXIT"
             | "QUIT"
-            | "REPORT"
-            | "CHANGELOG"
             | "ABOUT"
             | "PLUGINS"
             | "PLUGINMANAGER"
             | "APPLOAD"
-            | "DONATE"
-            | "WEBVERSION"
             | "HELP"
             | "PERF"
             | "CUI"
@@ -1466,7 +1462,6 @@ inventory::submit!(crate::command::CommandRegistration {
         "BACKGROUND",
         "CDIMSTY",
         "CELTSCALE",
-        "CHANGELOG",
         "CHPROP",
         "CLAYER",
         "CLEAR",
@@ -1482,7 +1477,6 @@ inventory::submit!(crate::command::CommandRegistration {
         "SELECTPREVIOUS",
         "PSELECT",
         "DIMSTYLE",
-        "DONATE",
         "DRAWORDER",
         "DRAWORDER_FRONT",
         "DRAWORDER_BACK",
@@ -1577,7 +1571,6 @@ inventory::submit!(crate::command::CommandRegistration {
         "QUIT",
         "REDO",
         "RENAME",
-        "REPORT",
         "SA",
         "SAVE",
         "SAVEAS",
@@ -1639,7 +1632,6 @@ inventory::submit!(crate::command::CommandRegistration {
         "VS",
         "WB",
         "WBLOCK",
-        "WEBVERSION",
         "XA",
         "XATTACH",
         "XDATA",

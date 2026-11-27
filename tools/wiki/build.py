@@ -276,7 +276,7 @@ def main(out):
         "# What's New",
         "",
         "Each release in short, newest first. The full notes, with every change and its contributors, "
-        "are in the linked release notes; `CHANGELOG` opens the releases page.",
+        "are in the linked release notes.",
     ]
     for _, ver, date, summary in sorted(notes, reverse=True):
         url = f"https://github.com/HakanSeven12/OpenCADStudio/blob/main/changelogs/v{ver}.md"

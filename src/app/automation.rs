@@ -5610,39 +5610,27 @@ DEAD
         assert_eq!(refusal.len(), 1, "scene tools must emit one refusal");
         assert_eq!(refusal[0].kind, EntryKind::Info);
 
-        // Check link commands in source without launching them.
-        let dispatch_src = include_str!("commands/mod.rs");
-        // Extract the `start_allowed` match body.
-        let gate = dispatch_src
-            .split("pub fn start_allowed")
-            .nth(1)
-            .and_then(|s| s.split('}').next())
-            .expect("the start_allowed gate moved — re-point this test");
-        // Welcome-page links plus app-wide configuration commands.
-        let standalone = [
-            "DONATE",
-            "REPORT",
-            "WEBVERSION",
-            "ABOUT",
-            "CHANGELOG",
-            "CUI",
-            "ALIASEDIT",
-        ];
-        for cmd in standalone {
+        for cmd in ["ABOUT", "CUI", "ALIASEDIT"] {
             assert!(
-                gate.contains(&format!("\"{cmd}\"")),
-                "{cmd} needs no drawing but is missing from dispatch's standalone \
-                 list, so it is refused on the welcome page"
+                crate::app::commands::start_allowed(cmd),
+                "{cmd} needs no drawing"
             );
+            assert!(app.dispatch_view(cmd, app.active_tab).is_some());
         }
-        // Every allowed command needs a dispatch arm.
-        let view_src = include_str!("commands/view.rs");
-        for cmd in standalone {
-            assert!(
-                view_src.contains(&format!("\"{cmd}\" =>"))
-                    || view_src.contains(&format!("\"{cmd}\" |")),
-                "{cmd} has no dispatch arm"
-            );
+    }
+
+    #[test]
+    fn upstream_links_are_absent_from_commands_and_menus() {
+        let mut app = OpenCADStudio::new_for_test();
+        let commands = crate::command::all_registered_command_names();
+        let menu_entries = crate::ui::menu_bar::search_entries();
+
+        for name in ["DONATE", "WEBVERSION", "REPORT", "FEEDBACK", "CHANGELOG"] {
+            assert!(!commands.contains(&name), "{name} is still registered");
+            assert!(!menu_entries.iter().any(|entry| entry.line == name));
+            assert!(crate::modules::registry::command_icon(name).is_none());
+            assert!(crate::command::command_summary(name).is_none());
+            assert!(app.dispatch_view(name, app.active_tab).is_none());
         }
     }
 

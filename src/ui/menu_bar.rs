@@ -681,7 +681,6 @@ const MENUS: &[(&str, &[Entry])] = &[
         &[
             Cmd("Help", "HELP", "F1"),
             Cmd("Keyboard Shortcuts", "SHORTCUTS", ""),
-            Cmd("Send Feedback", "FEEDBACK", ""),
             Sep,
             Cmd("About Open CAD Studio", "ABOUT", ""),
         ],

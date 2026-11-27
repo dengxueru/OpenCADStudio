@@ -47,7 +47,3 @@ Read the command line: every command says what it is asking for, and the options
 ## Keeping a record
 
 `LOGFILEON` writes everything shown in the command line to a log file, one per session, in the `logs` folder of your settings folder (`LOGFILEPATH`). `LOGFILEOFF` stops it. A log helps when you report a problem.
-
-## Reporting a problem
-
-<img src="images/icons/report.svg" width="20" alt=""> `REPORT` opens a new issue on the project's [issue tracker](https://github.com/HakanSeven12/OpenCADStudio/issues) with the program version and platform already filled in. Describe the steps that lead to the problem, and attach the drawing if you can (zipped). Questions and ideas are welcome in [Discussions](https://github.com/HakanSeven12/OpenCADStudio/discussions).

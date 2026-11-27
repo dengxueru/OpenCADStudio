@@ -1,6 +1,5 @@
 ---
 summary: Opens the About dialog with the version, build and system details of the program.
-related: CHANGELOG, REPORT
 ribbon: Manage tab › Application panel
 ---
 

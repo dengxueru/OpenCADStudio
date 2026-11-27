@@ -23,8 +23,8 @@ Builds that are not a clean checkout of the release tag carry build metadata:
 commit `ef189d77`, and `.dirty` is appended when the tree has uncommitted
 changes. `build.rs` derives this from git at compile time (`OCS_FULL_VERSION`);
 without a tag to count from (shallow clone, source tarball) only the hash is
-shown. The full form appears in About, **Copy Info**, `REPORT`, `--version`
-and recovery reports. The window title, update check and User-Agent keep the
+shown. The full form appears in About, **Copy Info**, `--version` and recovery
+reports. The window title and User-Agent keep the
 plain `2026.35`.
 
 To preview release notes, manually run **Weekly release** on `main` with

@@ -104,8 +104,7 @@ folder and load again on the next desktop launch.
 - `open_url`: `open::that` on native, `window.open(_blank)` on web.
 - `download_bytes`: web only (Blob + anchor download).
 - `handle_path`: real path on native, a name-only `PathBuf` on web.
-- `platform_info`: OS + arch on native, the browser user-agent on web (used to
-  pre-fill the Send Feedback issue).
+- `platform_info`: OS + arch on native, the browser user-agent on web.
 - The self-update check (`ureq`) is a no-op on the web.
 
 ## Build & deploy
